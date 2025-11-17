@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.dependencies import get_current_user
+from app.models import User
 from app.schemas import UserCreate, UserRead
 from app.services import UserAlreadyExistsError, create_user
 
@@ -20,9 +22,7 @@ async def register_user(
 ):
     """
     Реєструє нового користувача.
-    
-    Повертає створеного користувача (без пароля) зі статусом 201.
-    У разі конфлікту username/email — 409.
+    Публічний ендпоінт (токен не потрібен).
     """
     try:
         user = create_user(db, data)
@@ -33,3 +33,15 @@ async def register_user(
         )
     
     return user
+
+
+@router.get("/me", response_model=UserRead)
+async def get_me(current_user: User = Depends(get_current_user)):
+    """
+    Повертає профіль поточного залогіненого користувача.
+    
+    Вимагає JWT-токен у заголовку Authorization.
+    Використовується фронтендом для відображення профілю,
+    аватарки в навбарі, перевірки ролі тощо.
+    """
+    return current_user
