@@ -4,11 +4,30 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.models import User
-from app.schemas import TrackCreate, TrackDetail, TrackRead
+from app.schemas import TrackCreate, TrackDetail, TrackRead, TrackTrending
 from app.services.track_service import create_track_manually, get_track_detail, get_tracks_list
+from app.services.trending_service import get_trending_tracks
 
 
 router = APIRouter(prefix="/tracks", tags=["tracks"])
+
+
+@router.get("/trending", response_model=list[TrackTrending])
+async def trending_chart(
+    limit: int = Query(10, ge=1, le=50, description="Кількість треків у чарті"),
+    db: Session = Depends(get_db),
+):
+    """
+    Гарячий чарт — топ треків за алгоритмом Trending.
+    
+    Формула: score = avg_rating × log2(1 + recent_reviews_7d) × time_decay
+    
+    Враховує:
+    - Середній рейтинг (якість)
+    - Кількість нових рецензій за тиждень (активність)
+    - Час з останньої рецензії (свіжість)
+    """
+    return get_trending_tracks(db, limit=limit)
 
 
 @router.get("/", response_model=list[TrackRead])
@@ -54,7 +73,6 @@ async def create_track(
     """
     Додає новий трек вручну.
     Вимагає авторизацію.
-    Якщо артиста не існує — створює автоматично.
     """
     track = create_track_manually(db, data)
     return track
