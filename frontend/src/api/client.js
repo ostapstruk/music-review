@@ -48,6 +48,11 @@ export const tracksAPI = {
   getById: (id) => api.get(`/tracks/${id}`),
 
   create: (data) => api.post('/tracks/', data),
+
+  searchSpotify: (query, limit = 10) =>
+    api.get('/tracks/search/spotify', { params: { q: query, limit } }),
+
+  addFromSpotify: (data) => api.post('/tracks/from-spotify', data),
 };
 
 // ============================================================================

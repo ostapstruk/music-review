@@ -63,3 +63,15 @@ class TrackTrending(BaseModel):
     reviews_count: int
     recent_reviews: int
     trending_score: float
+
+class SpotifySearchResult(BaseModel):
+    """Результат пошуку з Spotify."""
+    
+    spotify_id: str
+    title: str
+    artist_name: str
+    album_title: str | None
+    release_year: int | None
+    cover_url: str | None
+    duration_ms: int | None
+    preview_url: str | None
