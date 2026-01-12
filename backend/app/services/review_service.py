@@ -56,6 +56,25 @@ def create_review(
     db.add(review)
     db.commit()
     db.refresh(review)
+
+    # 4. Записуємо в activity feed
+    from app.models.activity_feed import ActivityFeed
+    import json
+    
+    # Отримуємо назву треку для metadata
+    track_title = track.title
+    
+    activity = ActivityFeed(
+        user_id=user_id,
+        action_type="review_posted",
+        target_type="track",
+        target_id=track_id,
+        extra_data={"rating": rating, "track_title": track_title},
+    )
+    db.add(activity)
+    db.commit()
+    
+    # 5. Повертаємо з username
     
     # 4. Повертаємо з username
     username = db.execute(

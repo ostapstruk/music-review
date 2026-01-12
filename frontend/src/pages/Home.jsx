@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiTrendingUp, FiStar } from 'react-icons/fi';
 import { tracksAPI } from '../api/client';
+import ActivityFeed from '../components/ActivityFeed';
 
 export default function Home() {
   const [trending, setTrending] = useState([]);
@@ -84,6 +85,8 @@ export default function Home() {
           ))}
         </div>
       )}
+
+      <ActivityFeed />
     </div>
   );
 }

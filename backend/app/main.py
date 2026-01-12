@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1 import auth, badges, genres, reviews, tracks, users
+from app.api.v1 import activity, auth, badges, genres, reviews, tracks, users
 from app.core.config import settings
 
 
@@ -12,7 +12,6 @@ app = FastAPI(
     debug=settings.DEBUG,
 )
 
-# CORS — дозволяємо фронтенду на localhost:5173 робити запити
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -21,6 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(activity.router, prefix="/api/v1")
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(badges.router, prefix="/api/v1")
 app.include_router(genres.router, prefix="/api/v1")

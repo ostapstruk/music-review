@@ -85,4 +85,13 @@ export const badgesAPI = {
   getAll: () => api.get('/badges/'),
 };
 
+// ============================================================================
+// Activity Feed
+// ============================================================================
+
+export const activityAPI = {
+  getRecent: (limit = 15) =>
+    api.get('/activity/', { params: { limit } }),
+};
+
 export default api;

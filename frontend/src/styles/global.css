@@ -822,3 +822,44 @@ textarea.input {
 .spotify-result-info .text-muted {
     font-size: 0.8rem;
 }
+
+/* ---------- Activity Feed ---------- */
+.activity-feed {
+    margin-top: 40px;
+}
+
+.activity-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.activity-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--bg-input);
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+}
+
+.activity-text {
+    color: var(--text-secondary);
+    flex: 1;
+}
+
+.activity-time {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    flex-shrink: 0;
+    margin-left: 12px;
+}

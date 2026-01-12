@@ -1,4 +1,4 @@
-import { FiThumbsUp, FiThumbsDown, FiUser } from 'react-icons/fi';
+import { FiThumbsUp, FiThumbsDown, FiUser, FiVolume2 } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import { reviewsAPI } from '../api/client';
 import toast from 'react-hot-toast';
@@ -32,6 +32,21 @@ export default function ReviewCard({ review, onUpdate }) {
     }
   };
 
+  // TTS — озвучка рецензії
+  const handleSpeak = () => {
+    if (!review.text) return toast.error('Немає тексту для озвучки');
+    
+    // Зупиняємо попередню озвучку (якщо була)
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(review.text);
+    utterance.lang = 'uk-UA';
+    utterance.rate = 0.9; // трохи повільніше для кращого сприйняття
+    
+    window.speechSynthesis.speak(utterance);
+    toast.success('Озвучка запущена');
+  };
+
   const ratingClass =
     review.rating >= 8
       ? 'rating-high'
@@ -63,6 +78,11 @@ export default function ReviewCard({ review, onUpdate }) {
             <FiThumbsDown size={14} />
             <span>{review.dislikes_count || 0}</span>
           </button>
+          {review.text && (
+            <button className="vote-btn" onClick={handleSpeak} title="Озвучити рецензію">
+              <FiVolume2 size={14} />
+            </button>
+          )}
         </div>
         <span className="review-date">
           {new Date(review.created_at).toLocaleDateString('uk-UA')}
