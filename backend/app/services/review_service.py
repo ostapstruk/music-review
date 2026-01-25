@@ -234,3 +234,17 @@ def toggle_review_like(
     existing.is_like = is_like
     db.commit()
     return {"status": "liked" if is_like else "disliked"}
+
+def get_rating_distribution(db: Session, track_id: int) -> list[dict]:
+    """Повертає розподіл оцінок (скільки 10, скільки 9, ... скільки 1)."""
+    stmt = (
+        select(Review.rating, func.count(Review.id).label("count"))
+        .where(Review.track_id == track_id)
+        .group_by(Review.rating)
+        .order_by(Review.rating.desc())
+    )
+    rows = db.execute(stmt).all()
+    
+    # Заповнюємо всі 10 значень (навіть ті, де 0)
+    dist_map = {r: c for r, c in rows}
+    return [{"rating": r, "count": dist_map.get(r, 0)} for r in range(10, 0, -1)]

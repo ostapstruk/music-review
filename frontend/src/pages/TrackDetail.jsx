@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import ReviewCard from '../components/ReviewCard';
 import ReviewForm from '../components/ReviewForm';
 import AISummary from '../components/AISummary';
+import RatingHistogram from '../components/RatingHistogram';
 
 export default function TrackDetail() {
   const { id } = useParams();
@@ -133,6 +134,9 @@ export default function TrackDetail() {
           </div>
         </div>
       )}
+
+      {/* ===== ГІСТОГРАМА ===== */}
+      <RatingHistogram trackId={track.id} />
 
       {/* ===== ШІ-САМАРІ ===== */}
       <AISummary trackId={track.id} />

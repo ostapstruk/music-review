@@ -14,6 +14,9 @@ class TrackRead(BaseModel):
     spotify_id: str | None
     duration_ms: int | None
     cover_url: str | None
+    avg_rating: float | None = None
+    reviews_count: int = 0
+    artist_name: str | None = None
     
     model_config = ConfigDict(from_attributes=True)
 

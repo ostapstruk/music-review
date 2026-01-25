@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import Home from './pages/Home';
 import TrackList from './pages/TrackList';
 import TrackDetail from './pages/TrackDetail';
@@ -26,6 +27,7 @@ export default function App() {
             <Route path="/profile" element={<Profile />} />
           </Routes>
         </main>
+        <Footer />
         <Toaster
           position="bottom-right"
           toastOptions={{

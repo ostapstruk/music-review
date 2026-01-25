@@ -1,10 +1,23 @@
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiMusic, FiLogIn, FiLogOut, FiUser, FiPlus } from 'react-icons/fi';
+import { FiMusic, FiLogIn, FiLogOut, FiUser, FiPlus, FiEye } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [highContrast, setHighContrast] = useState(
+    () => localStorage.getItem('high_contrast') === 'true'
+  );
+
+  useEffect(() => {
+    if (highContrast) {
+      document.body.classList.add('high-contrast');
+    } else {
+      document.body.classList.remove('high-contrast');
+    }
+    localStorage.setItem('high_contrast', highContrast);
+  }, [highContrast]);
 
   const handleLogout = () => {
     logout();
@@ -25,6 +38,14 @@ export default function Navbar() {
         </div>
 
         <div className="navbar-actions">
+          <button
+            className={`contrast-toggle ${highContrast ? 'contrast-active' : ''}`}
+            onClick={() => setHighContrast(!highContrast)}
+            title="Режим високого контрасту"
+          >
+            <FiEye size={16} />
+          </button>
+
           {user ? (
             <>
               <Link to="/tracks/new" className="btn btn-sm btn-primary">
