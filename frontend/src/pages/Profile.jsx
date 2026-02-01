@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiStar, FiMessageSquare, FiTrendingUp, FiUser } from 'react-icons/fi';
+import { FiStar, FiMessageSquare, FiTrendingUp, FiUser, FiEdit2 } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-import { reviewsAPI } from '../api/client';
+import { reviewsAPI, authAPI } from '../api/client';
 
 export default function Profile() {
   const { user } = useAuth();
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [bio, setBio] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -18,6 +22,23 @@ export default function Profile() {
         .finally(() => setLoading(false));
     }
   }, [user]);
+
+  useEffect(() => {
+    if (user) setBio(user.bio || '');
+  }, [user]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await authAPI.updateProfile({ bio });
+      toast.success('Профіль оновлено!');
+      setEditing(false);
+    } catch {
+      toast.error('Помилка збереження');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (!user) {
     return (
@@ -32,11 +53,11 @@ export default function Profile() {
   const avgRating = reviews.length > 0
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : '—';
-  
+
   const highestRating = reviews.length > 0
     ? Math.max(...reviews.map(r => r.rating))
     : 0;
-  
+
   const lowestRating = reviews.length > 0
     ? Math.min(...reviews.map(r => r.rating))
     : 0;
@@ -54,6 +75,29 @@ export default function Profile() {
           <h1 className="profile-name">{user.username}</h1>
           <p className="profile-email">{user.email}</p>
           <span className="profile-role">{user.role}</span>
+
+          {!editing ? (
+            <>
+              {user.bio && <p style={{ marginTop: 12, color: 'var(--text-secondary)' }}>{user.bio}</p>}
+              <button className="btn btn-sm btn-secondary" style={{ marginTop: 12 }}
+                onClick={() => setEditing(true)}>
+                <FiEdit2 size={14} /> Редагувати
+              </button>
+            </>
+          ) : (
+            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <textarea className="input" placeholder="Розкажіть про себе..."
+                value={bio} onChange={(e) => setBio(e.target.value)} rows={3} />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn btn-sm btn-primary" onClick={handleSave} disabled={saving}>
+                  {saving ? 'Зберігаю...' : 'Зберегти'}
+                </button>
+                <button className="btn btn-sm btn-secondary" onClick={() => setEditing(false)}>
+                  Скасувати
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

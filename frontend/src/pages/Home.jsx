@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FiTrendingUp, FiStar, FiAward } from 'react-icons/fi';
 import { tracksAPI } from '../api/client';
 import ActivityFeed from '../components/ActivityFeed';
+import PlatformStats from '../components/PlatformStats';
 
 export default function Home() {
   const [trending, setTrending] = useState([]);
@@ -29,6 +30,8 @@ export default function Home() {
 
   return (
     <div className="page">
+      <PlatformStats />
+      
       {/* ===== БАНЕР "ТРЕК МІСЯЦЯ" ===== */}
       {trackOfMonth && (
         <Link to={`/tracks/${trackOfMonth.id}`} className="hero-banner">
@@ -64,9 +67,10 @@ export default function Home() {
       </h1>
 
       {trending.length === 0 ? (
-        <div className="empty-state">
+       <div className="empty-state card" style={{ padding: 40 }}>
           <h3>Чарт порожній</h3>
-          <p>Додайте треки та напишіть рецензії, щоб побачити чарт!</p>
+          <p style={{ marginBottom: 16 }}>Додайте треки та напишіть рецензії, щоб побачити чарт!</p>
+          <Link to="/tracks/new" className="btn btn-primary">Додати перший трек</Link>
         </div>
       ) : (
         <div className="trending-list">

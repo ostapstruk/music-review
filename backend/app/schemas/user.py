@@ -40,3 +40,9 @@ class UserRead(BaseModel):
     created_at: datetime
     
     model_config = ConfigDict(from_attributes=True)
+
+class UserUpdate(BaseModel):
+    """Схема для оновлення профілю."""
+    
+    bio: str | None = Field(None, max_length=500)
+    avatar_url: str | None = Field(None, max_length=500)

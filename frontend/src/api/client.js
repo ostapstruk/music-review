@@ -32,6 +32,8 @@ export const authAPI = {
     api.post('/users/', { username, email, password }),
 
   getMe: () => api.get('/users/me'),
+
+  updateProfile: (data) => api.put('/users/me', data),
 };
 
 // ============================================================================
@@ -73,6 +75,8 @@ export const reviewsAPI = {
   dislike: (reviewId) => api.post(`/reviews/dislike/${reviewId}`),
 
   getDistribution: (trackId) => api.get(`/reviews/distribution/${trackId}`),
+  
+  delete: (reviewId) => api.delete(`/reviews/${reviewId}`),
 };
 
 // ============================================================================
@@ -103,5 +107,22 @@ export const activityAPI = {
 export const aiAPI = {
   getSummary: (trackId) => api.get(`/ai/summary/${trackId}`),
 };
+
+// ============================================================================
+// Stats
+// ============================================================================
+
+export const statsAPI = {
+  get: () => api.get('/stats/'),
+};
+
+// ============================================================================
+// Artists
+// ============================================================================
+
+export const artistsAPI = {
+  getById: (id) => api.get(`/artists/${id}`),
+};
+
 
 export default api;

@@ -4,7 +4,7 @@ from app.schemas.badge import BadgeRead
 from app.schemas.genre import GenreRead
 from app.schemas.review import ReviewCreate, ReviewRead
 from app.schemas.track import SpotifySearchResult, TrackCreate, TrackDetail, TrackRead, TrackTrending
-from app.schemas.user import UserCreate, UserRead
+from app.schemas.user import UserCreate, UserRead, UserUpdate
 
 
 __all__ = [
@@ -22,4 +22,5 @@ __all__ = [
     "TrackTrending",
     "UserCreate",
     "UserRead",
+    "UserUpdate",
 ]

@@ -9,6 +9,7 @@ from app.services.review_service import (
     AlreadyReviewedError,
     TrackNotFoundError,
     create_review,
+    delete_review,
     get_rating_distribution,
     get_reviews_by_user,
     get_reviews_for_track,
@@ -86,6 +87,20 @@ async def list_user_reviews(
 async def rating_distribution(track_id: int, db: Session = Depends(get_db)):
     """Розподіл оцінок треку (для гістограми)."""
     return get_rating_distribution(db, track_id)
+
+@router.delete("/{review_id}", status_code=204)
+async def remove_review(
+    review_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Видалити свою рецензію."""
+    try:
+        deleted = delete_review(db, review_id, current_user.id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail="Review not found")
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
 
 @router.post("/like/{review_id}")
 async def like_review(

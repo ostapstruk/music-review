@@ -248,3 +248,23 @@ def get_rating_distribution(db: Session, track_id: int) -> list[dict]:
     # Заповнюємо всі 10 значень (навіть ті, де 0)
     dist_map = {r: c for r, c in rows}
     return [{"rating": r, "count": dist_map.get(r, 0)} for r in range(10, 0, -1)]
+
+def delete_review(db: Session, review_id: int, user_id: int) -> bool:
+    """
+    Видаляє рецензію. Тільки автор може видалити свою рецензію.
+    Повертає True якщо видалено, False якщо не знайдено.
+    Кидає PermissionError якщо чужа рецензія.
+    """
+    review = db.execute(
+        select(Review).where(Review.id == review_id)
+    ).scalar_one_or_none()
+    
+    if review is None:
+        return False
+    
+    if review.user_id != user_id:
+        raise PermissionError("Cannot delete another user's review")
+    
+    db.delete(review)
+    db.commit()
+    return True

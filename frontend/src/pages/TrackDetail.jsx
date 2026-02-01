@@ -83,7 +83,9 @@ export default function TrackDetail() {
 
         <div className="track-hero-info">
           <h1 className="track-hero-title">{track.title}</h1>
-          <p className="track-hero-artist">{track.artist_name}</p>
+          <Link to={`/artists/${track.artist_id}`} className="track-hero-artist">
+            {track.artist_name}
+          </Link>
 
           <div className="track-meta">
             {formatDuration(track.duration_ms) && (
