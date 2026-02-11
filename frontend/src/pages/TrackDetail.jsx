@@ -7,6 +7,7 @@ import ReviewCard from '../components/ReviewCard';
 import ReviewForm from '../components/ReviewForm';
 import AISummary from '../components/AISummary';
 import RatingHistogram from '../components/RatingHistogram';
+import AudioPlayer from '../components/AudioPlayer';
 
 export default function TrackDetail() {
   const { id } = useParams();
@@ -137,6 +138,10 @@ export default function TrackDetail() {
         </div>
       )}
 
+
+      {/* ===== АУДІО ПЛЕЄР ===== */}
+      <AudioPlayer previewUrl={track.preview_url} title={track.title} />
+      
       {/* ===== ГІСТОГРАМА ===== */}
       <RatingHistogram trackId={track.id} />
 

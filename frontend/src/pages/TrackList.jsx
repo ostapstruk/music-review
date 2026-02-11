@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiStar, FiSearch } from 'react-icons/fi';
 import { tracksAPI } from '../api/client';
+import MiniPlay from '../components/MiniPlay';
 
 const SORT_OPTIONS = [
   { value: 'date', label: 'За датою' },
@@ -105,6 +106,7 @@ export default function TrackList() {
                 ) : (
                   <div className="cover-placeholder"><FiStar size={32} /></div>
                 )}
+                <MiniPlay previewUrl={track.preview_url} />
               </div>
               <h3 className="track-card-title">{track.title}</h3>
               <p className="track-card-artist">{track.artist_name || 'Невідомий'}</p>
