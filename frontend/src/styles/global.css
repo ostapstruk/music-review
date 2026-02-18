@@ -873,6 +873,7 @@ textarea.input {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
     padding: 10px 14px;
     background: var(--bg-input);
     border-radius: var(--radius-md);
@@ -1634,4 +1635,144 @@ body.high-contrast .mini-play {
     .grid-3 {
         grid-template-columns: 1fr 1fr;
     }
+}
+
+/* ---------- Glow Effects ---------- */
+.btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+}
+
+.card:hover {
+    border-color: var(--border-light);
+    box-shadow: 0 4px 24px rgba(139, 92, 246, 0.08);
+}
+
+.trending-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 2px 16px rgba(139, 92, 246, 0.06);
+}
+
+body.light-theme .btn-primary:hover {
+    box-shadow: 0 4px 20px rgba(108, 92, 231, 0.3);
+}
+
+body.high-contrast .btn-primary:hover {
+    box-shadow: 0 4px 20px rgba(255, 204, 0, 0.4);
+}
+
+/* ---------- Fade In Animation ---------- */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.page {
+    padding: 30px 0;
+    animation: fadeInUp 0.4s ease-out;
+}
+
+.card {
+    animation: fadeInUp 0.3s ease-out;
+    animation-fill-mode: both;
+}
+
+.trending-item:nth-child(1) { animation-delay: 0.03s; }
+.trending-item:nth-child(2) { animation-delay: 0.06s; }
+.trending-item:nth-child(3) { animation-delay: 0.09s; }
+.trending-item:nth-child(4) { animation-delay: 0.12s; }
+.trending-item:nth-child(5) { animation-delay: 0.15s; }
+.trending-item:nth-child(6) { animation-delay: 0.18s; }
+.trending-item:nth-child(7) { animation-delay: 0.21s; }
+.trending-item:nth-child(8) { animation-delay: 0.24s; }
+.trending-item:nth-child(9) { animation-delay: 0.27s; }
+.trending-item:nth-child(10) { animation-delay: 0.30s; }
+
+.track-card:nth-child(1) { animation-delay: 0.05s; }
+.track-card:nth-child(2) { animation-delay: 0.10s; }
+.track-card:nth-child(3) { animation-delay: 0.15s; }
+.track-card:nth-child(4) { animation-delay: 0.20s; }
+.track-card:nth-child(5) { animation-delay: 0.25s; }
+.track-card:nth-child(6) { animation-delay: 0.30s; }
+
+.hero-banner {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* ---------- Backdrop Blur on Forms ---------- */
+.auth-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+}
+
+.review-form {
+    backdrop-filter: blur(8px);
+}
+
+body.light-theme .auth-card {
+    background: rgba(255, 255, 255, 0.85);
+}
+
+/* ---------- Cover Rating Badge ---------- */
+.cover-rating {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    font-size: 0.8rem;
+    backdrop-filter: blur(8px);
+}
+
+/* ---------- Trend Arrows ---------- */
+.trending-rank-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 40px;
+}
+
+.trend-arrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.trend-up {
+    color: var(--success);
+}
+
+.trend-down {
+    color: var(--error);
+}
+
+.trend-same {
+    color: var(--text-muted);
+}
+
+/* ---------- Back Button ---------- */
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 8px 0;
+    margin-bottom: 16px;
+    transition: var(--transition);
+}
+
+.back-btn:hover {
+    color: var(--accent);
 }

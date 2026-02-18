@@ -107,16 +107,16 @@ export default function TrackList() {
                   <div className="cover-placeholder"><FiStar size={32} /></div>
                 )}
                 <MiniPlay previewUrl={track.preview_url} />
+                {track.avg_rating > 0 && (
+                  <span className={`cover-rating ${
+                    track.avg_rating >= 8 ? 'rating-high' : track.avg_rating >= 5 ? 'rating-mid' : 'rating-low'
+                  }`}>
+                    {track.avg_rating.toFixed(1)}
+                  </span>
+                )}
               </div>
               <h3 className="track-card-title">{track.title}</h3>
               <p className="track-card-artist">{track.artist_name || 'Невідомий'}</p>
-              {track.avg_rating > 0 && (
-                <span className={`rating-badge ${
-                  track.avg_rating >= 8 ? 'rating-high' : track.avg_rating >= 5 ? 'rating-mid' : 'rating-low'
-                }`} style={{ marginTop: 8, alignSelf: 'flex-start' }}>
-                  {track.avg_rating.toFixed(1)}
-                </span>
-              )}
             </Link>
           ))}
         </div>

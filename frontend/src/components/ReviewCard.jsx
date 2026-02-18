@@ -2,6 +2,7 @@ import { FiThumbsUp, FiThumbsDown, FiUser, FiVolume2, FiTrash2 } from 'react-ico
 import { useAuth } from '../context/AuthContext';
 import { reviewsAPI } from '../api/client';
 import toast from 'react-hot-toast';
+import UserAvatar from './UserAvatar';
 
 export default function ReviewCard({ review, onUpdate }) {
   const { user } = useAuth();
@@ -58,7 +59,7 @@ export default function ReviewCard({ review, onUpdate }) {
     <div className="review-card card">
       <div className="review-header">
         <div className="review-user">
-          <FiUser size={16} />
+          <UserAvatar username={review.username} size={28} />
           <span className="review-username">{review.username || 'Анонім'}</span>
         </div>
         <span className={`rating-badge ${ratingClass}`}>{review.rating}/10</span>
