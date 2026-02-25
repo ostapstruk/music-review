@@ -1,17 +1,30 @@
-import { FiThumbsUp, FiThumbsDown, FiUser, FiVolume2, FiTrash2 } from 'react-icons/fi';
+import { useState } from 'react';
+import { FiThumbsUp, FiThumbsDown, FiVolume2, FiTrash2 } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import { reviewsAPI } from '../api/client';
 import toast from 'react-hot-toast';
 import UserAvatar from './UserAvatar';
+import timeAgo from '../utils/timeAgo';
 
 export default function ReviewCard({ review, onUpdate }) {
   const { user } = useAuth();
+  const [userVote, setUserVote] = useState(null); // 'like', 'dislike', or null
+  const [likesCount, setLikesCount] = useState(review.likes_count || 0);
+  const [dislikesCount, setDislikesCount] = useState(review.dislikes_count || 0);
 
   const handleLike = async () => {
     if (!user) return toast.error('Увійдіть, щоб голосувати');
     try {
       const res = await reviewsAPI.like(review.id);
-      toast.success(res.data.status === 'removed' ? 'Голос знято' : 'Лайк!');
+      if (res.data.status === 'liked') {
+        // Якщо раніше був дизлайк — знімаємо його
+        if (userVote === 'dislike') setDislikesCount((c) => c - 1);
+        setLikesCount((c) => (userVote === 'like' ? c : c + 1));
+        setUserVote('like');
+      } else if (res.data.status === 'removed') {
+        setLikesCount((c) => c - 1);
+        setUserVote(null);
+      }
       if (onUpdate) onUpdate();
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Помилка');
@@ -22,7 +35,15 @@ export default function ReviewCard({ review, onUpdate }) {
     if (!user) return toast.error('Увійдіть, щоб голосувати');
     try {
       const res = await reviewsAPI.dislike(review.id);
-      toast.success(res.data.status === 'removed' ? 'Голос знято' : 'Дизлайк');
+      if (res.data.status === 'disliked') {
+        // Якщо раніше був лайк — знімаємо його
+        if (userVote === 'like') setLikesCount((c) => c - 1);
+        setDislikesCount((c) => (userVote === 'dislike' ? c : c + 1));
+        setUserVote('dislike');
+      } else if (res.data.status === 'removed') {
+        setDislikesCount((c) => c - 1);
+        setUserVote(null);
+      }
       if (onUpdate) onUpdate();
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Помилка');
@@ -69,13 +90,19 @@ export default function ReviewCard({ review, onUpdate }) {
 
       <div className="review-footer">
         <div className="review-actions">
-          <button className="vote-btn" onClick={handleLike}>
+          <button
+            className={`vote-btn ${userVote === 'like' ? 'vote-liked' : ''}`}
+            onClick={handleLike}
+          >
             <FiThumbsUp size={14} />
-            <span>{review.likes_count || 0}</span>
+            <span>{likesCount}</span>
           </button>
-          <button className="vote-btn" onClick={handleDislike}>
+          <button
+            className={`vote-btn ${userVote === 'dislike' ? 'vote-disliked' : ''}`}
+            onClick={handleDislike}
+          >
             <FiThumbsDown size={14} />
-            <span>{review.dislikes_count || 0}</span>
+            <span>{dislikesCount}</span>
           </button>
           {review.text && (
             <button className="vote-btn" onClick={handleSpeak} title="Озвучити">
@@ -88,8 +115,11 @@ export default function ReviewCard({ review, onUpdate }) {
             </button>
           )}
         </div>
-        <span className="review-date">
-          {new Date(review.created_at).toLocaleDateString('uk-UA')}
+        <span
+          className="review-date"
+          title={new Date(review.created_at).toLocaleString('uk-UA')}
+        >
+          {timeAgo(review.created_at)}
         </span>
       </div>
     </div>

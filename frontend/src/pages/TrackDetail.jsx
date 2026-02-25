@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { FiDisc, FiClock, FiStar, FiArrowLeft } from 'react-icons/fi';
+import { FiDisc, FiClock, FiStar, FiArrowLeft, FiShare2 } from 'react-icons/fi';
 import { tracksAPI, reviewsAPI } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import ReviewCard from '../components/ReviewCard';
@@ -8,6 +8,8 @@ import ReviewForm from '../components/ReviewForm';
 import AISummary from '../components/AISummary';
 import RatingHistogram from '../components/RatingHistogram';
 import AudioPlayer from '../components/AudioPlayer';
+import AnimatedNumber from '../components/AnimatedNumber';
+import toast from 'react-hot-toast';
 
 export default function TrackDetail() {
   const { id } = useParams();
@@ -69,10 +71,19 @@ export default function TrackDetail() {
 
   return (
     <div className="page track-detail">
-      <button className="back-btn" onClick={() => navigate(-1)}>
-        <FiArrowLeft size={18} />
-        Назад
-      </button>
+      <div className="track-toolbar">
+        <button className="back-btn" onClick={() => navigate(-1)}>
+          <FiArrowLeft size={18} />
+          Назад
+        </button>
+        <button className="back-btn" onClick={() => {
+          navigator.clipboard.writeText(window.location.href);
+          toast.success('Посилання скопійовано!');
+        }}>
+          <FiShare2 size={16} />
+          Поділитися
+        </button>
+      </div>
 
       {/* ===== ШАПКА ===== */}
       <div className="track-hero">
@@ -103,7 +114,7 @@ export default function TrackDetail() {
 
           <div className="track-rating-block">
             <span className={`rating-badge rating-big ${ratingClass}`}>
-              {track.avg_rating?.toFixed(1) || '—'}
+              <AnimatedNumber value={track.avg_rating} />
             </span>
             <div className="rating-details">
               <span>{track.reviews_count} рецензій</span>
@@ -173,26 +184,48 @@ export default function TrackDetail() {
       )}
 
       {/* ===== СПИСОК РЕЦЕНЗІЙ ===== */}
-      <div className="reviews-section">
-        <h2 className="reviews-title">
-          Рецензії ({reviews.length})
-        </h2>
-        {reviews.length === 0 ? (
-          <div className="empty-state">
-            <p>Ще ніхто не залишив рецензію. Будьте першим!</p>
-          </div>
-        ) : (
+      <ReviewsSection reviews={reviews} onUpdate={fetchData} />
+    </div>
+  );
+}
+
+function ReviewsSection({ reviews, onUpdate }) {
+  const [showAll, setShowAll] = useState(false);
+  const INITIAL_COUNT = 5;
+  
+  const visible = showAll ? reviews : reviews.slice(0, INITIAL_COUNT);
+  const hasMore = reviews.length > INITIAL_COUNT;
+
+  return (
+    <div className="reviews-section">
+      <h2 className="reviews-title">
+        Рецензії ({reviews.length})
+      </h2>
+      {reviews.length === 0 ? (
+        <div className="empty-state">
+          <p>Ще ніхто не залишив рецензію. Будьте першим!</p>
+        </div>
+      ) : (
+        <>
           <div className="reviews-list">
-            {reviews.map((review) => (
+            {visible.map((review) => (
               <ReviewCard
                 key={review.id}
                 review={review}
-                onUpdate={fetchData}
+                onUpdate={onUpdate}
               />
             ))}
           </div>
-        )}
-      </div>
+          {hasMore && !showAll && (
+            <button
+              className="btn btn-secondary show-more-btn"
+              onClick={() => setShowAll(true)}
+            >
+              Показати ще ({reviews.length - INITIAL_COUNT})
+            </button>
+          )}
+        </>
+      )}
     </div>
   );
 }

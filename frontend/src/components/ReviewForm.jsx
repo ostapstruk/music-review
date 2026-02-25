@@ -3,6 +3,19 @@ import { FiStar, FiSend } from 'react-icons/fi';
 import { reviewsAPI } from '../api/client';
 import toast from 'react-hot-toast';
 
+const RATING_LABELS = {
+  1: 'Жахливо',
+  2: 'Дуже погано',
+  3: 'Погано',
+  4: 'Нижче середнього',
+  5: 'Нормально',
+  6: 'Непогано',
+  7: 'Добре',
+  8: 'Дуже добре',
+  9: 'Чудово',
+  10: 'Шедевр',
+};
+
 export default function ReviewForm({ trackId, onSubmit }) {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -27,6 +40,8 @@ export default function ReviewForm({ trackId, onSubmit }) {
     }
   };
 
+  const activeRating = hoverRating || rating;
+
   return (
     <form onSubmit={handleSubmit} className="review-form card">
       <h3 className="review-form-title">Ваша оцінка</h3>
@@ -36,22 +51,24 @@ export default function ReviewForm({ trackId, onSubmit }) {
           <button
             key={n}
             type="button"
-            className={`star-btn ${
-              n <= (hoverRating || rating) ? 'star-active' : ''
-            }`}
+            className={`star-btn ${n <= activeRating ? 'star-active' : ''}`}
             onMouseEnter={() => setHoverRating(n)}
             onMouseLeave={() => setHoverRating(0)}
             onClick={() => setRating(n)}
+            title={RATING_LABELS[n]}
           >
             <FiStar
               size={20}
-              fill={n <= (hoverRating || rating) ? 'currentColor' : 'none'}
+              fill={n <= activeRating ? 'currentColor' : 'none'}
             />
           </button>
         ))}
-        <span className="star-value">
-          {hoverRating || rating || '—'}/10
-        </span>
+        <div className="star-info">
+          <span className="star-value">{activeRating || '—'}/10</span>
+          {activeRating > 0 && (
+            <span className="star-label">{RATING_LABELS[activeRating]}</span>
+          )}
+        </div>
       </div>
 
       <textarea

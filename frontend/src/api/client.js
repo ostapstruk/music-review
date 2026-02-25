@@ -114,6 +114,7 @@ export const aiAPI = {
 
 export const statsAPI = {
   get: () => api.get('/stats/'),
+  getMyLikes: () => api.get('/stats/my-likes'),
 };
 
 // ============================================================================
@@ -123,6 +124,5 @@ export const statsAPI = {
 export const artistsAPI = {
   getById: (id) => api.get(`/artists/${id}`),
 };
-
 
 export default api;
