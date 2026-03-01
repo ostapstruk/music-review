@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.models import User
 from app.schemas import ReviewCreate, ReviewRead
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from app.core.security import decode_access_token
 from app.services.review_service import (
     AlreadyReviewedError,
     TrackNotFoundError,
@@ -13,9 +14,9 @@ from app.services.review_service import (
     get_rating_distribution,
     get_reviews_by_user,
     get_reviews_for_track,
+    get_user_votes,
     toggle_review_like,
 )
-
 
 router = APIRouter(prefix="/reviews", tags=["reviews"])
 
@@ -101,6 +102,16 @@ async def remove_review(
             raise HTTPException(status_code=404, detail="Review not found")
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
+    
+
+@router.get("/my-votes/{track_id}")
+async def my_votes(
+    track_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Повертає голоси поточного юзера за рецензіями треку."""
+    return get_user_votes(db, current_user.id, track_id)    
 
 @router.post("/like/{review_id}")
 async def like_review(

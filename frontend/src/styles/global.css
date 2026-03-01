@@ -1854,3 +1854,17 @@ body.light-theme .auth-card {
 .vote-btn {
     transition: all 0.3s ease;
 }
+
+/* ---------- Track Toolbar ---------- */
+.track-toolbar-right {
+    display: flex;
+    gap: 8px;
+}
+
+.spotify-link {
+    color: #1DB954;
+}
+
+.spotify-link:hover {
+    color: #1ed760;
+}

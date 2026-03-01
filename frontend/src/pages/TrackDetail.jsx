@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { FiDisc, FiClock, FiStar, FiArrowLeft, FiShare2 } from 'react-icons/fi';
+import { FiDisc, FiClock, FiStar, FiArrowLeft, FiShare2, FiExternalLink } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 import { tracksAPI, reviewsAPI } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import ReviewCard from '../components/ReviewCard';
@@ -9,7 +10,6 @@ import AISummary from '../components/AISummary';
 import RatingHistogram from '../components/RatingHistogram';
 import AudioPlayer from '../components/AudioPlayer';
 import AnimatedNumber from '../components/AnimatedNumber';
-import toast from 'react-hot-toast';
 
 export default function TrackDetail() {
   const { id } = useParams();
@@ -17,6 +17,7 @@ export default function TrackDetail() {
   const { user } = useAuth();
   const [track, setTrack] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [myVotes, setMyVotes] = useState({});
   const [loading, setLoading] = useState(true);
 
   const fetchData = () => {
@@ -30,6 +31,12 @@ export default function TrackDetail() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
+
+    if (user) {
+      reviewsAPI.getMyVotes(id)
+        .then((res) => setMyVotes(res.data))
+        .catch(() => {});
+    }
   };
 
   useEffect(() => {
@@ -76,16 +83,20 @@ export default function TrackDetail() {
           <FiArrowLeft size={18} />
           Назад
         </button>
-        <button className="back-btn" onClick={() => {
-          navigator.clipboard.writeText(window.location.href);
-          toast.success('Посилання скопійовано!');
-        }}>
-          <FiShare2 size={16} />
-          Поділитися
-        </button>
+        <div className="track-toolbar-right">
+          {track.spotify_id && (
+            <SpotifyLink spotifyId={track.spotify_id} />
+          )}
+          <button className="back-btn" onClick={() => {
+            navigator.clipboard.writeText(window.location.href);
+            toast.success('Посилання скопійовано!');
+          }}>
+            <FiShare2 size={16} />
+            Поділитися
+          </button>
+        </div>
       </div>
 
-      {/* ===== ШАПКА ===== */}
       <div className="track-hero">
         <div className="track-hero-cover">
           {track.cover_url ? (
@@ -99,7 +110,7 @@ export default function TrackDetail() {
 
         <div className="track-hero-info">
           <h1 className="track-hero-title">{track.title}</h1>
-          <Link to={`/artists/${track.artist_id}`} className="track-hero-artist">
+          <Link to={"/artists/" + track.artist_id} className="track-hero-artist">
             {track.artist_name}
           </Link>
 
@@ -113,7 +124,7 @@ export default function TrackDetail() {
           </div>
 
           <div className="track-rating-block">
-            <span className={`rating-badge rating-big ${ratingClass}`}>
+            <span className={"rating-badge rating-big " + ratingClass}>
               <AnimatedNumber value={track.avg_rating} />
             </span>
             <div className="rating-details">
@@ -126,7 +137,6 @@ export default function TrackDetail() {
         </div>
       </div>
 
-      {/* ===== AUDIO FEATURES ===== */}
       {(track.danceability || track.energy || track.acousticness || track.valence) && (
         <div className="card audio-features">
           <h3 style={{ marginBottom: 16 }}>ДНК музики</h3>
@@ -153,16 +163,12 @@ export default function TrackDetail() {
         </div>
       )}
 
-      {/* ===== АУДІО ПЛЕЄР ===== */}
       <AudioPlayer previewUrl={track.preview_url} title={track.title} />
 
-      {/* ===== ГІСТОГРАМА ===== */}
       <RatingHistogram trackId={track.id} />
 
-      {/* ===== ШІ-САМАРІ ===== */}
       <AISummary trackId={track.id} />
 
-      {/* ===== ФОРМА РЕЦЕНЗІЇ ===== */}
       {user && !hasReviewed && (
         <ReviewForm trackId={track.id} onSubmit={fetchData} />
       )}
@@ -183,18 +189,27 @@ export default function TrackDetail() {
         </div>
       )}
 
-      {/* ===== СПИСОК РЕЦЕНЗІЙ ===== */}
-      <ReviewsSection reviews={reviews} onUpdate={fetchData} />
+      <ReviewsSection reviews={reviews} onUpdate={fetchData} myVotes={myVotes} />
     </div>
   );
 }
 
-function ReviewsSection({ reviews, onUpdate }) {
+function SpotifyLink({ spotifyId }) {
+  var url = "https://open.spotify.com/track/" + spotifyId;
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer" className="back-btn spotify-link">
+      <FiExternalLink size={16} />
+      Spotify
+    </a>
+  );
+}
+
+function ReviewsSection({ reviews, onUpdate, myVotes }) {
   const [showAll, setShowAll] = useState(false);
-  const INITIAL_COUNT = 5;
-  
-  const visible = showAll ? reviews : reviews.slice(0, INITIAL_COUNT);
-  const hasMore = reviews.length > INITIAL_COUNT;
+  var INITIAL_COUNT = 5;
+
+  var visible = showAll ? reviews : reviews.slice(0, INITIAL_COUNT);
+  var hasMore = reviews.length > INITIAL_COUNT;
 
   return (
     <div className="reviews-section">
@@ -213,6 +228,7 @@ function ReviewsSection({ reviews, onUpdate }) {
                 key={review.id}
                 review={review}
                 onUpdate={onUpdate}
+                initialVote={myVotes[String(review.id)] || null}
               />
             ))}
           </div>
@@ -231,7 +247,7 @@ function ReviewsSection({ reviews, onUpdate }) {
 }
 
 function FeatureBar({ label, value }) {
-  const percent = Math.round(Number(value) * 100);
+  var percent = Math.round(Number(value) * 100);
   return (
     <div className="feature-item">
       <div className="feature-header">
@@ -241,7 +257,7 @@ function FeatureBar({ label, value }) {
       <div className="feature-bar">
         <div
           className="feature-bar-fill"
-          style={{ width: `${percent}%` }}
+          style={{ width: percent + "%" }}
         />
       </div>
     </div>

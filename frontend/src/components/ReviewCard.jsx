@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FiThumbsUp, FiThumbsDown, FiVolume2, FiTrash2 } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import { reviewsAPI } from '../api/client';
@@ -6,9 +6,16 @@ import toast from 'react-hot-toast';
 import UserAvatar from './UserAvatar';
 import timeAgo from '../utils/timeAgo';
 
-export default function ReviewCard({ review, onUpdate }) {
+export default function ReviewCard({ review, onUpdate, initialVote = null }) {
   const { user } = useAuth();
-  const [userVote, setUserVote] = useState(null); // 'like', 'dislike', or null
+  const [userVote, setUserVote] = useState(initialVote);
+  
+  // Синхронізуємо з initialVote коли він приходить з бекенду
+  useEffect(() => {
+    if (initialVote !== null) {
+      setUserVote(initialVote);
+    }
+  }, [initialVote]);
   const [likesCount, setLikesCount] = useState(review.likes_count || 0);
   const [dislikesCount, setDislikesCount] = useState(review.dislikes_count || 0);
 
@@ -17,15 +24,13 @@ export default function ReviewCard({ review, onUpdate }) {
     try {
       const res = await reviewsAPI.like(review.id);
       if (res.data.status === 'liked') {
-        // Якщо раніше був дизлайк — знімаємо його
         if (userVote === 'dislike') setDislikesCount((c) => c - 1);
-        setLikesCount((c) => (userVote === 'like' ? c : c + 1));
+        if (userVote !== 'like') setLikesCount((c) => c + 1);
         setUserVote('like');
       } else if (res.data.status === 'removed') {
         setLikesCount((c) => c - 1);
         setUserVote(null);
       }
-      if (onUpdate) onUpdate();
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Помилка');
     }
@@ -36,15 +41,13 @@ export default function ReviewCard({ review, onUpdate }) {
     try {
       const res = await reviewsAPI.dislike(review.id);
       if (res.data.status === 'disliked') {
-        // Якщо раніше був лайк — знімаємо його
         if (userVote === 'like') setLikesCount((c) => c - 1);
-        setDislikesCount((c) => (userVote === 'dislike' ? c : c + 1));
+        if (userVote !== 'dislike') setDislikesCount((c) => c + 1);
         setUserVote('dislike');
       } else if (res.data.status === 'removed') {
         setDislikesCount((c) => c - 1);
         setUserVote(null);
       }
-      if (onUpdate) onUpdate();
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Помилка');
     }

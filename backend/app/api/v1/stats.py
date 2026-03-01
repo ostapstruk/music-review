@@ -6,6 +6,7 @@ from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.models import Review, ReviewLike, Track, User
 
+
 router = APIRouter(prefix="/stats", tags=["stats"])
 
 
@@ -22,19 +23,25 @@ async def platform_stats(db: Session = Depends(get_db)):
         "users_count": users_count,
     }
 
+
 @router.get("/my-likes")
 async def my_likes_count(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
 ):
-    """Кількість лайків на рецензіях поточного юзера."""
-    from app.models import Review, ReviewLike
-    
-    count = db.execute(
+    """Кількість лайків і дизлайків на рецензіях поточного юзера."""
+    likes = db.execute(
         select(func.count(ReviewLike.user_id))
         .join(Review, ReviewLike.review_id == Review.id)
         .where(Review.user_id == current_user.id)
         .where(ReviewLike.is_like.is_(True))
     ).scalar() or 0
     
-    return {"likes_received": count}
+    dislikes = db.execute(
+        select(func.count(ReviewLike.user_id))
+        .join(Review, ReviewLike.review_id == Review.id)
+        .where(Review.user_id == current_user.id)
+        .where(ReviewLike.is_like.is_(False))
+    ).scalar() or 0
+    
+    return {"likes_received": likes, "dislikes_received": dislikes}
