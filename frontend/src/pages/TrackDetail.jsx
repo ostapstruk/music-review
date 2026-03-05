@@ -10,6 +10,7 @@ import AISummary from '../components/AISummary';
 import RatingHistogram from '../components/RatingHistogram';
 import AudioPlayer from '../components/AudioPlayer';
 import AnimatedNumber from '../components/AnimatedNumber';
+import usePageTitle from '../utils/usePageTitle';
 
 export default function TrackDetail() {
   const { id } = useParams();
@@ -19,6 +20,8 @@ export default function TrackDetail() {
   const [reviews, setReviews] = useState([]);
   const [myVotes, setMyVotes] = useState({});
   const [loading, setLoading] = useState(true);
+
+  usePageTitle(track ? track.title : 'Трек');
 
   const fetchData = () => {
     Promise.all([

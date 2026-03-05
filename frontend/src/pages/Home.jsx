@@ -4,11 +4,14 @@ import { FiTrendingUp, FiStar, FiAward } from 'react-icons/fi';
 import { tracksAPI } from '../api/client';
 import ActivityFeed from '../components/ActivityFeed';
 import PlatformStats from '../components/PlatformStats';
+import usePageTitle from '../utils/usePageTitle';
 
 export default function Home() {
   const [trending, setTrending] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  usePageTitle('Гарячий чарт');
+  
   useEffect(() => {
     tracksAPI
       .getTrending(10)

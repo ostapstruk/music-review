@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FiDisc, FiStar } from 'react-icons/fi';
 import { artistsAPI } from '../api/client';
+import usePageTitle from '../utils/usePageTitle';
 
 export default function ArtistDetail() {
   const { id } = useParams();
   const [artist, setArtist] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  usePageTitle(artist ? artist.name : 'Артист');
 
   useEffect(() => {
     artistsAPI

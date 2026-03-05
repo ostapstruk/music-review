@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FiStar, FiSearch } from 'react-icons/fi';
 import { tracksAPI } from '../api/client';
 import MiniPlay from '../components/MiniPlay';
+import usePageTitle from '../utils/usePageTitle';
 
 const SORT_OPTIONS = [
   { value: 'date', label: 'За датою' },
@@ -17,6 +18,8 @@ export default function TrackList() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('date');
   const [loading, setLoading] = useState(true);
+
+  usePageTitle('Усі треки');
 
   useEffect(() => {
     tracksAPI

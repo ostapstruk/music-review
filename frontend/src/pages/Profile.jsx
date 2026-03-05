@@ -4,6 +4,7 @@ import { FiStar, FiMessageSquare, FiTrendingUp, FiUser, FiEdit2 } from 'react-ic
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { reviewsAPI, authAPI } from '../api/client';
+import usePageTitle from '../utils/usePageTitle';
 
 export default function Profile() {
   const { user } = useAuth();
@@ -13,6 +14,8 @@ export default function Profile() {
   const [bio, setBio] = useState('');
   const [saving, setSaving] = useState(false);
 
+  usePageTitle(user ? user.username : 'Профіль');
+  
   useEffect(() => {
     if (user) {
       reviewsAPI
@@ -123,23 +126,31 @@ export default function Profile() {
       {/* Рецензії */}
       <h2 className="section-title">Мої рецензії</h2>
       {reviews.length === 0 ? (
-        <div className="empty-state">
-          <p>Ви ще не написали жодної рецензії.</p>
-          <Link to="/tracks" className="btn btn-primary" style={{ marginTop: 12 }}>
-            Переглянути треки
+        <div className="empty-state card" style={{ padding: 40 }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>🎧</div>
+          <h3>Час стати критиком!</h3>
+          <p style={{ marginBottom: 16, maxWidth: 400, margin: '8px auto 16px' }}>
+            Знайдіть трек, який вас зачепив, і напишіть свою першу рецензію.
+            Ваша думка важлива!
+          </p>
+          <Link to="/tracks" className="btn btn-primary">
+            Знайти трек для рецензії
           </Link>
         </div>
       ) : (
         <div className="reviews-list">
           {reviews.map((r) => (
-            <Link to={`/tracks/${r.track_id}`} key={r.id} className="card review-profile-item">
+            <Link to={"/tracks/" + r.track_id} key={r.id} className="card review-profile-item">
+              {r.track_cover && (
+                <img src={r.track_cover} alt={r.track_title} className="review-profile-cover" />
+              )}
               <div className="review-profile-left">
-                <strong>Трек #{r.track_id}</strong>
+                <strong>{r.track_title || ("Трек #" + r.track_id)}</strong>
                 {r.text && <p className="review-text">{r.text}</p>}
               </div>
-              <span className={`rating-badge ${
+              <span className={"rating-badge " + (
                 r.rating >= 8 ? 'rating-high' : r.rating >= 5 ? 'rating-mid' : 'rating-low'
-              }`}>
+              )}>
                 {r.rating}/10
               </span>
             </Link>
