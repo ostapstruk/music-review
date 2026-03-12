@@ -1,8 +1,6 @@
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
-
 from app.models import Review, ReviewLike, Track, User
-
 
 class TrackNotFoundError(Exception):
     pass
@@ -144,8 +142,9 @@ def get_reviews_by_user(
 ) -> list[dict]:
     """Повертає рецензії конкретного користувача (для профілю)."""
     stmt = (
-        select(Review, User.username)
+        select(Review, User.username, Track.title.label("track_title"), Track.cover_url.label("track_cover"))
         .join(User, Review.user_id == User.id)
+        .join(Track, Review.track_id == Track.id)
         .where(Review.user_id == user_id)
         .order_by(Review.created_at.desc())
         .limit(limit)
@@ -153,8 +152,14 @@ def get_reviews_by_user(
     )
     
     rows = db.execute(stmt).all()
-    return [_review_to_dict(review, username) for review, username in rows]
-
+    return [
+        {
+            **_review_to_dict(review, username),
+            "track_title": track_title,
+            "track_cover": track_cover,
+        }
+        for review, username, track_title, track_cover in rows
+    ]
 
 def _review_to_dict(
     review: Review,

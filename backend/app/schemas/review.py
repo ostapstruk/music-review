@@ -30,5 +30,7 @@ class ReviewRead(BaseModel):
     username: str | None = None
     likes_count: int = 0
     dislikes_count: int = 0
+    track_title: str | None = None
+    track_cover: str | None = None
     
     model_config = ConfigDict(from_attributes=True)
