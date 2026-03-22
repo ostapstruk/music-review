@@ -90,7 +90,7 @@ export default function AudioPlayer({ previewUrl, title }) {
       />
 
       <div className="player-main">
-        <button className="player-play-btn" onClick={togglePlay}>
+        <button className="player-play-btn" onClick={togglePlay} aria-label={playing ? "Пауза" : "Відтворити"}>
           {playing ? <FiPause size={20} /> : <FiPlay size={20} />}
         </button>
 

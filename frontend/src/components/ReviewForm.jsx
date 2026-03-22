@@ -67,6 +67,7 @@ export default function ReviewForm({ trackId, onSubmit }) {
             onMouseLeave={() => setHoverRating(0)}
             onClick={() => setRating(n)}
             title={RATING_LABELS[n]}
+            aria-label={n + " з 10: " + RATING_LABELS[n]}
           >
             <FiStar
               size={20}
