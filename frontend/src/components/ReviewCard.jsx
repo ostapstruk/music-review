@@ -5,6 +5,7 @@ import { reviewsAPI } from '../api/client';
 import toast from 'react-hot-toast';
 import UserAvatar from './UserAvatar';
 import timeAgo from '../utils/timeAgo';
+import { Link } from 'react-router-dom';
 
 export default function ReviewCard({ review, onUpdate, initialVote = null }) {
   const { user } = useAuth();
@@ -82,10 +83,18 @@ export default function ReviewCard({ review, onUpdate, initialVote = null }) {
   return (
     <div className="review-card card">
       <div className="review-header">
-        <div className="review-user">
-          <UserAvatar username={review.username} size={28} />
+        <Link to={"/users/" + review.user_id} className="review-user">
+          {review.avatar_url ? (
+            <img
+              src={review.avatar_url}
+              alt=""
+              style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }}
+            />
+          ) : (
+            <UserAvatar username={review.username} size={28} />
+          )}
           <span className="review-username">{review.username || 'Анонім'}</span>
-        </div>
+        </Link>
         <span className={`rating-badge ${ratingClass}`}>{review.rating}/10</span>
       </div>
 

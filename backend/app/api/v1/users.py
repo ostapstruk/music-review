@@ -41,3 +41,12 @@ async def update_me(
     db.commit()
     db.refresh(current_user)
     return current_user
+
+@router.get("/{user_id}/public", response_model=UserRead)
+async def get_user_public(user_id: int, db: Session = Depends(get_db)):
+    """Публічний профіль будь-якого юзера."""
+    from sqlalchemy import select
+    user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user

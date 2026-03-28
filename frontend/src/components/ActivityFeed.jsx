@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { FiActivity } from 'react-icons/fi';
 import { activityAPI } from '../api/client';
 import UserAvatar from './UserAvatar';
@@ -16,17 +17,6 @@ export default function ActivityFeed() {
 
   if (events.length === 0) return null;
 
-  const timeAgo = (dateStr) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'щойно';
-    if (mins < 60) return `${mins} хв тому`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours} год тому`;
-    const days = Math.floor(hours / 24);
-    return `${days} дн тому`;
-  };
-
   return (
     <div className="activity-feed card">
       <h3 className="activity-title">
@@ -36,7 +26,17 @@ export default function ActivityFeed() {
       <div className="activity-list">
         {events.map((event) => (
           <div key={event.id} className="activity-item">
-            <UserAvatar username={event.username} size={24} />
+            <Link to={"/users/" + event.user_id} className="activity-avatar-link">
+              {event.avatar_url ? (
+                <img
+                  src={event.avatar_url}
+                  alt=""
+                  style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover' }}
+                />
+              ) : (
+                <UserAvatar username={event.username} size={24} />
+              )}
+            </Link>
             <span className="activity-text">{event.text}</span>
             <span className="activity-time">{timeAgo(event.created_at)}</span>
           </div>

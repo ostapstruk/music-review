@@ -26,8 +26,8 @@ class ReviewRead(BaseModel):
     created_at: datetime
     updated_at: datetime
     
-    # Обчислювані поля
     username: str | None = None
+    avatar_url: str | None = None
     likes_count: int = 0
     dislikes_count: int = 0
     track_title: str | None = None

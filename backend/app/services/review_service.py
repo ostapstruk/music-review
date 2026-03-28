@@ -92,7 +92,6 @@ def get_reviews_for_track(
     Повертає список рецензій для треку, відсортованих
     за корисністю (лайки - дизлайки) та датою.
     """
-    # Підзапит для підрахунку лайків/дизлайків
     likes_sub = (
         select(
             ReviewLike.review_id,
@@ -111,6 +110,7 @@ def get_reviews_for_track(
         select(
             Review,
             User.username,
+            User.avatar_url,
             func.coalesce(likes_sub.c.likes_count, 0).label("likes_count"),
             func.coalesce(likes_sub.c.dislikes_count, 0).label("dislikes_count"),
         )
@@ -129,10 +129,9 @@ def get_reviews_for_track(
     rows = db.execute(stmt).all()
     
     return [
-        _review_to_dict(review, username, likes, dislikes)
-        for review, username, likes, dislikes in rows
+        _review_to_dict(review, username, likes, dislikes, avatar_url)
+        for review, username, avatar_url, likes, dislikes in rows
     ]
-
 
 def get_reviews_by_user(
     db: Session,
@@ -166,6 +165,7 @@ def _review_to_dict(
     username: str,
     likes_count: int = 0,
     dislikes_count: int = 0,
+    avatar_url: str | None = None,
 ) -> dict:
     """Допоміжна функція — перетворює Review на словник."""
     return {
@@ -177,10 +177,10 @@ def _review_to_dict(
         "created_at": review.created_at,
         "updated_at": review.updated_at,
         "username": username,
+        "avatar_url": avatar_url,
         "likes_count": likes_count,
         "dislikes_count": dislikes_count,
     }
-
 
 def toggle_review_like(
     db: Session,
