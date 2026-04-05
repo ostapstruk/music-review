@@ -5,10 +5,7 @@ const API_BASE = 'http://127.0.0.1:8000/api/v1';
 
 // Створюємо екземпляр axios з базовими налаштуваннями
 const api = axios.create({
-  baseURL: API_BASE,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1',
 });
 
 // Інтерцептор — автоматично додає JWT-токен до кожного запиту
