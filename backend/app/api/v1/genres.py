@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -7,9 +7,6 @@ from app.models import Genre
 from app.schemas import GenreRead
 
 
-# APIRouter — "під-застосунок", який потім приєднаємо до головного FastAPI.
-# prefix="/genres" означає, що всі ендпоінти тут матимуть префікс /genres.
-# tags=["genres"] — групування у Swagger UI для зручності.
 router = APIRouter(prefix="/genres", tags=["genres"])
 
 
@@ -22,3 +19,22 @@ async def list_genres(db: Session = Depends(get_db)):
     result = db.execute(stmt)
     genres = result.scalars().all()
     return genres
+
+
+@router.get("/{slug}", response_model=GenreRead)
+async def get_genre_by_slug(slug: str, db: Session = Depends(get_db)):
+    """
+    Повертає один жанр за його slug.
+    Якщо жанр не знайдено — повертає 404.
+    """
+    stmt = select(Genre).where(Genre.slug == slug)
+    result = db.execute(stmt)
+    genre = result.scalar_one_or_none()
+    
+    if genre is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Genre with slug '{slug}' not found",
+        )
+    
+    return genre

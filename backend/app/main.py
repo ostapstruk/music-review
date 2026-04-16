@@ -1,10 +1,9 @@
 from fastapi import FastAPI
 
-from app.api.v1 import genres
+from app.api.v1 import badges, genres
 from app.core.config import settings
 
 
-# Створюємо застосунок FastAPI
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
@@ -15,6 +14,7 @@ app = FastAPI(
 
 # Підключаємо роутери API v1
 app.include_router(genres.router, prefix="/api/v1")
+app.include_router(badges.router, prefix="/api/v1")
 
 
 @app.get("/")
