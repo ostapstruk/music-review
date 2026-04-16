@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from app.api.v1 import genres
 from app.core.config import settings
 
 
@@ -10,6 +11,10 @@ app = FastAPI(
     description="API для платформи рецензування музики",
     debug=settings.DEBUG,
 )
+
+
+# Підключаємо роутери API v1
+app.include_router(genres.router, prefix="/api/v1")
 
 
 @app.get("/")
