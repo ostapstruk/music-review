@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.api.v1 import badges, genres
+from app.api.v1 import badges, genres, users
 from app.core.config import settings
 
 
@@ -13,15 +13,15 @@ app = FastAPI(
 
 
 # Підключаємо роутери API v1
-app.include_router(genres.router, prefix="/api/v1")
 app.include_router(badges.router, prefix="/api/v1")
+app.include_router(genres.router, prefix="/api/v1")
+app.include_router(users.router, prefix="/api/v1")
 
 
 @app.get("/")
 async def root():
     """
     Кореневий ендпоінт. Повертає базову інформацію про API.
-    Корисно для перевірки, що сервер живий.
     """
     return {
         "message": "Music Review API is running",
@@ -33,7 +33,6 @@ async def root():
 @app.get("/health")
 async def health_check():
     """
-    Health check ендпоінт. Використовується Kubernetes та іншими
-    системами моніторингу, щоб зрозуміти, чи живий сервер.
+    Health check ендпоінт.
     """
     return {"status": "healthy"}
