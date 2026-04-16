@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.api.v1 import auth, badges, genres, users
+from app.api.v1 import auth, badges, genres, tracks, users
 from app.core.config import settings
 
 
@@ -11,11 +11,10 @@ app = FastAPI(
     debug=settings.DEBUG,
 )
 
-
-# Підключаємо роутери API v1
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(badges.router, prefix="/api/v1")
 app.include_router(genres.router, prefix="/api/v1")
+app.include_router(tracks.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")
 
 
@@ -31,5 +30,5 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """Health check ендпоінт."""
+    """Health check."""
     return {"status": "healthy"}
