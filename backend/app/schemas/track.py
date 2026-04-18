@@ -47,3 +47,19 @@ class TrackCreate(BaseModel):
     release_year: int | None = None
     cover_url: str | None = None
     duration_ms: int | None = None
+
+class TrackTrending(BaseModel):
+    """Трек у Trending-чарті."""
+    
+    id: int
+    title: str
+    artist_id: int
+    artist_name: str | None
+    cover_url: str | None
+    spotify_id: str | None
+    duration_ms: int | None
+    album_id: int | None
+    avg_rating: float
+    reviews_count: int
+    recent_reviews: int
+    trending_score: float
