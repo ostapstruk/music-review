@@ -1,18 +1,24 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { FiStar, FiMessageSquare, FiTrendingUp, FiUser, FiArrowLeft } from 'react-icons/fi';
-import { authAPI, reviewsAPI } from '../api/client';
+import { FiStar, FiMessageSquare, FiTrendingUp, FiUser, FiArrowLeft, FiTrash2, FiExternalLink, FiShield } from 'react-icons/fi';
+import toast from 'react-hot-toast';
+import { authAPI, reviewsAPI, adminAPI } from '../api/client';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import usePageTitle from '../utils/usePageTitle';
+import RoleBadge from '../components/RoleBadge';
 
 export default function PublicProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
   usePageTitle(profile ? profile.username : 'Профіль');
+
+  const loadReviews = () => reviewsAPI.getForUser(id).then((res) => setReviews(res.data));
 
   useEffect(() => {
     Promise.all([
@@ -26,6 +32,34 @@ export default function PublicProfile() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [id]);
+
+  const isAdmin = currentUser && currentUser.role === 'admin';
+  const isSelf = currentUser && profile && currentUser.id === profile.id;
+  const targetIsAdmin = profile && profile.role === 'admin';
+
+  const handleRoleChange = async (newRole, label) => {
+    if (!window.confirm(`${label} для @${profile.username}?`)) return;
+    try {
+      const res = await adminAPI.changeUserRole(profile.id, newRole);
+      toast.success('Роль оновлено');
+      setProfile((p) => ({ ...p, role: res.data.role }));
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Не вдалося змінити роль');
+    }
+  };
+
+  const handleDeleteReview = async (e, reviewId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!window.confirm('Видалити цю рецензію?')) return;
+    try {
+      await reviewsAPI.delete(reviewId);
+      toast.success('Рецензію видалено');
+      await loadReviews();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Помилка');
+    }
+  };
 
   if (loading) return <div className="loading"><div className="spinner" /></div>;
   if (!profile) {
@@ -60,10 +94,69 @@ export default function PublicProfile() {
           )}
         </div>
         <div className="profile-info">
-          <h1 className="profile-name">{profile.username}</h1>
-          <span className="profile-role">{profile.role}</span>
+          <div className="profile-name-row">
+            <h1 className="profile-name">{profile.username}</h1>
+            <RoleBadge role={profile.role} size="lg" />
+            {profile.is_verified_artist && profile.role !== 'artist' && (
+              <RoleBadge role="artist" size="lg" />
+            )}
+          </div>
           {profile.bio && (
             <p style={{ marginTop: 12, color: 'var(--text-secondary)' }}>{profile.bio}</p>
+          )}
+
+          {isAdmin && !isSelf && (
+            <div className="profile-admin-actions">
+              {!targetIsAdmin ? (
+                <button
+                  className="btn btn-sm btn-primary"
+                  onClick={() => handleRoleChange('admin', 'Дати права адміна')}
+                  title="Призначити цього юзера адміном"
+                >
+                  <FiShield size={14} /> Зробити адміном
+                </button>
+              ) : (
+                <button
+                  className="btn btn-sm btn-secondary"
+                  onClick={() => handleRoleChange(
+                    profile.is_verified_artist ? 'artist' : 'listener',
+                    'Зняти права адміна',
+                  )}
+                  title={
+                    profile.is_verified_artist
+                      ? 'Понизити до артиста (клейм лишиться)'
+                      : 'Понизити до звичайного юзера'
+                  }
+                >
+                  <FiShield size={14} /> Зняти права адміна
+                </button>
+              )}
+            </div>
+          )}
+
+          {profile.artist_id && (
+            <Link
+              to={`/artists/${profile.artist_id}`}
+              className="profile-artist-link"
+              title="Публічна сторінка артиста"
+            >
+              {profile.artist_image_url ? (
+                <img
+                  src={profile.artist_image_url}
+                  alt={profile.artist_name}
+                  className="profile-artist-thumb"
+                />
+              ) : (
+                <div className="profile-artist-thumb profile-artist-thumb-placeholder">
+                  <FiUser size={20} />
+                </div>
+              )}
+              <div className="profile-artist-info">
+                <span className="profile-artist-label">Публічна сторінка артиста</span>
+                <strong className="profile-artist-name">{profile.artist_name}</strong>
+              </div>
+              <FiExternalLink size={16} className="profile-artist-arrow" />
+            </Link>
           )}
         </div>
       </div>
@@ -109,6 +202,16 @@ export default function PublicProfile() {
               )}>
                 {r.rating}/10
               </span>
+              {isAdmin && (
+                <button
+                  className="vote-btn delete-btn review-profile-delete"
+                  onClick={(e) => handleDeleteReview(e, r.id)}
+                  title="Видалити (адмін)"
+                  aria-label="Видалити рецензію (адмін)"
+                >
+                  <FiTrash2 size={14} />
+                </button>
+              )}
             </Link>
           ))}
         </div>

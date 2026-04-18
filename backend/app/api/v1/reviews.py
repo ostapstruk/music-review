@@ -95,9 +95,14 @@ async def remove_review(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Видалити свою рецензію."""
+    """Видалити свою рецензію. Адмін може видалити будь-яку."""
     try:
-        deleted = delete_review(db, review_id, current_user.id)
+        deleted = delete_review(
+            db,
+            review_id,
+            current_user.id,
+            is_admin=(current_user.role == "admin"),
+        )
         if not deleted:
             raise HTTPException(status_code=404, detail="Review not found")
     except PermissionError as e:

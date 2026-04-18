@@ -1,9 +1,30 @@
 import base64
+import logging
 from datetime import datetime, timezone
 
 import httpx
 
 from app.core.config import settings
+
+
+logger = logging.getLogger(__name__)
+
+
+def _log_spotify_error(response: httpx.Response, context: str) -> None:
+    """Логує тіло помилкової відповіді Spotify, щоб було видно причину 4xx."""
+    try:
+        body = response.json()
+        message = body.get("error", {}).get("message") or body
+    except Exception:
+        message = response.text[:500]
+    logger.warning(
+        "Spotify %s error for %s: %s",
+        response.status_code, context, message,
+    )
+    print(
+        f"[spotify-error] status={response.status_code} ctx={context} body={message}",
+        flush=True,
+    )
 
 
 class SpotifyClient:
@@ -62,7 +83,7 @@ class SpotifyClient:
         Повертає список з назвою, артистом, обкладинкою, тривалістю.
         """
         token = await self._get_token()
-        
+
         async with httpx.AsyncClient() as client:
             response = await client.get(
                 f"{self.API_BASE}/search",
@@ -75,22 +96,152 @@ class SpotifyClient:
             )
             response.raise_for_status()
             data = response.json()
-        
-        results = []
-        for item in data.get("tracks", {}).get("items", []):
-            results.append({
-                "spotify_id": item["id"],
-                "title": item["name"],
-                "artist_name": item["artists"][0]["name"] if item["artists"] else "Unknown",
-                "album_title": item["album"]["name"] if item.get("album") else None,
-                "release_year": self._extract_year(item.get("album", {}).get("release_date")),
-                "cover_url": self._get_cover(item.get("album", {}).get("images", [])),
-                "duration_ms": item.get("duration_ms"),
-                "preview_url": item.get("preview_url"),
-            })
-        
-        return results
+
+        return [self._format_track(item) for item in data.get("tracks", {}).get("items", [])]
+
+    def _format_track(self, item: dict) -> dict:
+        """Перетворює track-обʼєкт зі Spotify-відповіді у наш плоский формат."""
+        primary_artist = item["artists"][0] if item.get("artists") else None
+        return {
+            "spotify_id": item["id"],
+            "title": item["name"],
+            "artist_name": primary_artist["name"] if primary_artist else "Unknown",
+            "artist_spotify_id": primary_artist["id"] if primary_artist else None,
+            "album_title": item["album"]["name"] if item.get("album") else None,
+            "release_year": self._extract_year(item.get("album", {}).get("release_date")),
+            "cover_url": self._get_cover(item.get("album", {}).get("images", [])),
+            "duration_ms": item.get("duration_ms"),
+            "preview_url": item.get("preview_url"),
+        }
     
+    async def get_artist_top_tracks(
+        self,
+        spotify_artist_id: str,
+        artist_name: str | None = None,
+        market: str = "US",
+        limit: int = 10,
+    ) -> list[dict]:
+        """
+        Топ-треки артиста зі Spotify.
+        Спочатку пробуємо офіційний `/artists/{id}/top-tracks`. Якщо Spotify
+        віддає 403 (рестрикції Client-Credentials-режиму, які зʼявились у
+        листопаді 2024), фолбекаємось до search-API з фільтром
+        `artist:"<name>"` і відсіюємо лише треки потрібного артиста.
+        """
+        token = await self._get_token()
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{self.API_BASE}/artists/{spotify_artist_id}/top-tracks",
+                    params={"market": market},
+                    headers={"Authorization": f"Bearer {token}"},
+                )
+                if response.status_code >= 400:
+                    _log_spotify_error(response, f"top-tracks artist={spotify_artist_id}")
+                    response.raise_for_status()
+                data = response.json()
+            return [self._format_track(item) for item in data.get("tracks", [])][:limit]
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code != 403:
+                raise
+            # Падаємо в фолбек
+
+        # Якщо імʼя артиста не передали — спробуємо дістати його з /artists/{id}.
+        if not artist_name:
+            try:
+                meta = await self.get_artist(spotify_artist_id)
+                if meta:
+                    artist_name = meta.get("name")
+            except httpx.HTTPStatusError:
+                artist_name = None
+
+        if not artist_name:
+            return []
+
+        return await self._search_tracks_by_artist(
+            spotify_artist_id, artist_name, market, limit,
+        )
+
+    async def _search_tracks_by_artist(
+        self,
+        spotify_artist_id: str,
+        artist_name: str,
+        market: str,
+        limit: int,
+    ) -> list[dict]:
+        """
+        Search-фолбек: знаходить треки артиста через звичайний search і
+        фільтрує за artist_id. Свідомо НЕ використовуємо `market` та
+        field-filter `artist:"..."` — на Spotify dev-аплікаціях вони
+        часто повертають 400. Точність забезпечуємо локальним фільтром
+        за artist_id.
+        """
+        token = await self._get_token()
+        # Spotify dev-апи без Extended Quota мають жорсткий ліміт = 10
+        # на /search (limit=20 уже віддає 400 "Invalid limit").
+        fetch_limit = 10
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.API_BASE}/search",
+                params={
+                    "q": artist_name,
+                    "type": "track",
+                    "limit": fetch_limit,
+                },
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            if response.status_code >= 400:
+                _log_spotify_error(
+                    response,
+                    f"search q={artist_name!r} limit={fetch_limit}",
+                )
+                response.raise_for_status()
+            data = response.json()
+
+        items = data.get("tracks", {}).get("items", [])
+        # Лишаємо лише ті, де серед артистів є наш ID — позбавляємось колаб-треків
+        # випадкових тезок. Дедуплікуємо за spotify_id (search може повертати дублі).
+        seen: set[str] = set()
+        results: list[dict] = []
+        for item in items:
+            track_artist_ids = {a["id"] for a in item.get("artists", [])}
+            if spotify_artist_id not in track_artist_ids:
+                continue
+            track_id = item.get("id")
+            if not track_id or track_id in seen:
+                continue
+            seen.add(track_id)
+            results.append(self._format_track(item))
+            if len(results) >= limit:
+                break
+
+        return results
+
+    async def get_artist(self, spotify_artist_id: str) -> dict | None:
+        """
+        Метадані артиста (name, image, genres). Використовується при імпорті
+        нового артиста з посилання Spotify.
+        """
+        token = await self._get_token()
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.API_BASE}/artists/{spotify_artist_id}",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            if response.status_code == 404:
+                return None
+            response.raise_for_status()
+            data = response.json()
+
+        return {
+            "spotify_id": data["id"],
+            "name": data["name"],
+            "image_url": self._get_cover(data.get("images", [])),
+        }
+
     async def get_track_features(self, spotify_id: str) -> dict | None:
         """
         Отримує audio features треку (danceability, energy тощо).

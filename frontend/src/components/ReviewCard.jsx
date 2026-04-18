@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { reviewsAPI } from '../api/client';
 import toast from 'react-hot-toast';
 import UserAvatar from './UserAvatar';
+import RoleBadge from './RoleBadge';
 import timeAgo from '../utils/timeAgo';
 import { Link } from 'react-router-dom';
 
@@ -76,6 +77,8 @@ export default function ReviewCard({ review, onUpdate, initialVote = null }) {
   };
 
   const isOwner = user && user.id === review.user_id;
+  const isAdmin = user && user.role === 'admin';
+  const canDelete = isOwner || isAdmin;
 
   const ratingClass =
     review.rating >= 8 ? 'rating-high' : review.rating >= 5 ? 'rating-mid' : 'rating-low';
@@ -94,6 +97,12 @@ export default function ReviewCard({ review, onUpdate, initialVote = null }) {
             <UserAvatar username={review.username} size={28} />
           )}
           <span className="review-username">{review.username || 'Анонім'}</span>
+          {review.role && review.role !== 'listener' && (
+            <RoleBadge role={review.role} showLabel={false} />
+          )}
+          {review.is_verified_artist && review.role !== 'artist' && (
+            <RoleBadge role="artist" showLabel={false} />
+          )}
         </Link>
         <span className={`rating-badge ${ratingClass}`}>{review.rating}/10</span>
       </div>
@@ -123,8 +132,12 @@ export default function ReviewCard({ review, onUpdate, initialVote = null }) {
               <FiVolume2 size={14} />
             </button>
           )}
-          {isOwner && (
-            <button className="vote-btn delete-btn" onClick={handleDelete} title="Видалити">
+          {canDelete && (
+            <button
+              className="vote-btn delete-btn"
+              onClick={handleDelete}
+              title={isOwner ? 'Видалити свою рецензію' : 'Видалити (адмін)'}
+            >
               <FiTrash2 size={14} />
             </button>
           )}

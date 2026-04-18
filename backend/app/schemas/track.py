@@ -70,10 +70,11 @@ class TrackTrending(BaseModel):
 
 class SpotifySearchResult(BaseModel):
     """Результат пошуку з Spotify."""
-    
+
     spotify_id: str
     title: str
     artist_name: str
+    artist_spotify_id: str | None = None
     album_title: str | None
     release_year: int | None
     cover_url: str | None

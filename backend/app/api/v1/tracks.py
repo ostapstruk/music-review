@@ -2,12 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user, require_admin
 from app.models import User
 from app.schemas import SpotifySearchResult, TrackCreate, TrackDetail, TrackRead, TrackTrending
 from app.services.track_service import (
     create_track_from_spotify,
     create_track_manually,
+    delete_track,
     get_track_detail,
     get_tracks_list,
 )
@@ -93,3 +94,15 @@ async def create_track(
     """Додає трек вручну."""
     track = create_track_manually(db, data)
     return track
+
+
+@router.delete("/{track_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_track(
+    track_id: int,
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Видалити трек. Доступно лише адмінам. Усі рецензії знесуться каскадом."""
+    deleted = delete_track(db, track_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"Track {track_id} not found")

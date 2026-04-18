@@ -50,5 +50,31 @@ async def get_current_user(
             detail="User not found",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     return user
+
+
+def require_role(*allowed_roles: str):
+    """
+    Фабрика залежностей: пропускає лише юзерів з роллю зі списку.
+
+        @router.delete("/tracks/{id}")
+        async def delete(user: User = Depends(require_role("admin"))):
+            ...
+
+    Кидає HTTP 403, якщо роль не підходить.
+    """
+
+    async def _check(current_user: User = Depends(get_current_user)) -> User:
+        if current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient privileges",
+            )
+        return current_user
+
+    return _check
+
+
+require_admin = require_role("admin")
+require_artist = require_role("artist", "admin")

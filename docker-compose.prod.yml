@@ -1,0 +1,112 @@
+# Production Compose. Запуск:
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Відмінності від базового docker-compose.yml:
+# - Postgres НЕ виставлений назовні (5432 не публікується).
+# - Frontend бʼє в /api/v1 на тому ж хості (через nginx-проксі всередині),
+#   тому VITE_API_URL=/api/v1 і не треба знати публічну адресу при білді.
+# - На всіх сервісах restart: unless-stopped — після ребуту/збою
+#   контейнери самі піднімуться.
+# - Prometheus/Grafana прибрані: для дипломки в проді обмаль користі,
+#   а ресурс на VPS зекономить. За потреби — розкоментуй у самому низу.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: musicreview_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    # Жодних "ports" — Postgres доступний лише іншим сервісам по docker-network
+    expose:
+      - "5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: musicreview_backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      SECRET_KEY: ${SECRET_KEY}
+      ACCESS_TOKEN_EXPIRE_MINUTES: 60
+      JWT_ALGORITHM: HS256
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID}
+      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      DEBUG: "false"
+    expose:
+      - "8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Відносний URL — браузер бʼє у той самий хост, nginx проксить /api → backend.
+        VITE_API_URL: /api/v1
+    container_name: musicreview_frontend
+    restart: unless-stopped
+    ports:
+      # Єдиний публічний порт. Якщо ставиш Caddy/Traefik для TLS — змінюй на "127.0.0.1:8080:80"
+      # і маршрутизуй через reverse-proxy.
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+
+# Якщо хочеш моніторинг у проді — розкоментуй блок нижче.
+# Зважай: 9090/3001 будуть відкриті в інет, постав хоча б basic-auth у nginx або
+# обмеж ports на "127.0.0.1:..." і викликай їх через SSH-тунель.
+#
+#  prometheus:
+#    image: prom/prometheus:latest
+#    container_name: musicreview_prometheus
+#    restart: unless-stopped
+#    volumes:
+#      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+#      - prometheus_data:/prometheus
+#    command:
+#      - '--config.file=/etc/prometheus/prometheus.yml'
+#      - '--storage.tsdb.path=/prometheus'
+#    ports:
+#      - "127.0.0.1:9090:9090"
+#    depends_on:
+#      - backend
+#
+#  grafana:
+#    image: grafana/grafana:latest
+#    container_name: musicreview_grafana
+#    restart: unless-stopped
+#    environment:
+#      GF_SECURITY_ADMIN_USER: admin
+#      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+#      GF_USERS_ALLOW_SIGN_UP: "false"
+#    volumes:
+#      - grafana_data:/var/lib/grafana
+#      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+#      - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+#    ports:
+#      - "127.0.0.1:3001:3000"
+#    depends_on:
+#      - prometheus
+#
+# volumes (додатково):
+#  prometheus_data:
+#  grafana_data:

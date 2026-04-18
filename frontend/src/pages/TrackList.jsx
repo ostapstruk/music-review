@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiStar, FiSearch } from 'react-icons/fi';
+import { FiStar, FiSearch, FiTrash2 } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 import { tracksAPI } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import MiniPlay from '../components/MiniPlay';
 import usePageTitle from '../utils/usePageTitle';
 
@@ -13,24 +15,45 @@ const SORT_OPTIONS = [
 ];
 
 export default function TrackList() {
+  const { user } = useAuth();
   const [tracks, setTracks] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('date');
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
 
   usePageTitle('Усі треки');
 
+  const isAdmin = user && user.role === 'admin';
+
+  const loadTracks = () =>
+    tracksAPI.getAll(100).then((res) => {
+      setTracks(res.data);
+      setFiltered(res.data);
+    });
+
   useEffect(() => {
-    tracksAPI
-      .getAll(100)
-      .then((res) => {
-        setTracks(res.data);
-        setFiltered(res.data);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    loadTracks().catch(console.error).finally(() => setLoading(false));
   }, []);
+
+  const handleDelete = async (e, track) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!window.confirm(`Видалити трек "${track.title}"? Усі рецензії до нього зникнуть назавжди.`)) {
+      return;
+    }
+    setDeletingId(track.id);
+    try {
+      await tracksAPI.delete(track.id);
+      toast.success('Трек видалено');
+      await loadTracks();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Не вдалося видалити');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   useEffect(() => {
     let result = [...tracks];
@@ -116,6 +139,18 @@ export default function TrackList() {
                   }`}>
                     {track.avg_rating.toFixed(1)}
                   </span>
+                )}
+                {isAdmin && (
+                  <button
+                    type="button"
+                    className="track-admin-delete"
+                    onClick={(e) => handleDelete(e, track)}
+                    disabled={deletingId === track.id}
+                    title="Видалити трек (адмін)"
+                    aria-label="Видалити трек"
+                  >
+                    <FiTrash2 size={16} />
+                  </button>
                 )}
               </div>
               <h3 className="track-card-title">{track.title}</h3>

@@ -28,6 +28,8 @@ class ReviewRead(BaseModel):
     
     username: str | None = None
     avatar_url: str | None = None
+    role: str | None = None
+    is_verified_artist: bool = False
     likes_count: int = 0
     dislikes_count: int = 0
     track_title: str | None = None

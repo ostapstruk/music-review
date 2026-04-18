@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { FiDisc, FiClock, FiStar, FiArrowLeft, FiShare2, FiExternalLink } from 'react-icons/fi';
+import { FiDisc, FiClock, FiStar, FiArrowLeft, FiShare2, FiExternalLink, FiTrash2 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import { tracksAPI, reviewsAPI } from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -97,6 +97,25 @@ export default function TrackDetail() {
             <FiShare2 size={16} />
             Поділитися
           </button>
+          {user && user.role === 'admin' && (
+            <button
+              className="back-btn admin-delete-btn"
+              onClick={async () => {
+                if (!window.confirm(`Видалити трек "${track.title}"? Усі рецензії зникнуть назавжди.`)) return;
+                try {
+                  await tracksAPI.delete(track.id);
+                  toast.success('Трек видалено');
+                  navigate('/tracks');
+                } catch (err) {
+                  toast.error(err.response?.data?.detail || 'Не вдалося видалити');
+                }
+              }}
+              title="Видалити трек (адмін)"
+            >
+              <FiTrash2 size={16} />
+              Видалити
+            </button>
+          )}
         </div>
       </div>
 

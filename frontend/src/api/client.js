@@ -54,6 +54,8 @@ export const tracksAPI = {
     api.get('/tracks/search/spotify', { params: { q: query, limit } }),
 
   addFromSpotify: (data) => api.post('/tracks/from-spotify', data),
+
+  delete: (id) => api.delete(`/tracks/${id}`),
 };
 
 // ============================================================================
@@ -124,6 +126,23 @@ export const statsAPI = {
 
 export const artistsAPI = {
   getById: (id) => api.get(`/artists/${id}`),
+  getMe: () => api.get('/artists/me'),
+  syncMyTracks: () => api.post('/artists/me/sync-tracks'),
+  claim: (artistId, message) =>
+    api.post('/artists/claim', { artist_id: artistId, message }),
+};
+
+// ============================================================================
+// Admin
+// ============================================================================
+
+export const adminAPI = {
+  listClaims: (statusFilter) =>
+    api.get('/admin/claims', { params: statusFilter ? { status: statusFilter } : {} }),
+  approveClaim: (claimId) => api.post(`/admin/claims/${claimId}/approve`),
+  rejectClaim: (claimId) => api.post(`/admin/claims/${claimId}/reject`),
+  changeUserRole: (userId, role) =>
+    api.patch(`/admin/users/${userId}/role`, { role }),
 };
 
 export default api;

@@ -2,7 +2,19 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from app.api.v1 import activity, ai, artists, auth, badges, genres, reviews, stats, tracks, users
+from app.api.v1 import (
+    activity,
+    admin,
+    ai,
+    artists,
+    auth,
+    badges,
+    genres,
+    reviews,
+    stats,
+    tracks,
+    users,
+)
 from app.core.config import settings
 
 
@@ -25,6 +37,7 @@ app.add_middleware(
 Instrumentator().instrument(app).expose(app)
 
 app.include_router(activity.router, prefix="/api/v1")
+app.include_router(admin.router, prefix="/api/v1")
 app.include_router(ai.router, prefix="/api/v1")
 app.include_router(artists.router, prefix="/api/v1")
 app.include_router(auth.router, prefix="/api/v1")

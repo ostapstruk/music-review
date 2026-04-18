@@ -39,3 +39,17 @@ INSERT INTO badges (code, name, description, tier) VALUES
     ('pop_ambassador',    'Амбасадор попу',     'Оцінив 50 треків у жанрі Pop',                     'diamond'),
     ('hiphop_ambassador', 'Амбасадор хіп-хопу', 'Оцінив 50 треків у жанрі Hip-Hop',                 'diamond'),
     ('early_bird',        'Рання пташка',       'Одним з перших оцінив свіжий реліз',              'silver');
+
+-- -----------------------------------------------------------------------------
+-- Demo users (для зручної демонстрації комісії).
+-- Паролі: admin/admin123, artist/artist123, listener/listener123, critic/critic123.
+-- Хеш — bcrypt з 12 rounds, сумісний з backend/app/core/security.py.
+-- Домен @example.com — стандартний reserved для тестів (RFC 2606).
+-- НЕ використовуй .local — pydantic email-validator його блокує (RFC 6762).
+-- -----------------------------------------------------------------------------
+
+INSERT INTO users (username, email, password_hash, role, bio) VALUES
+    ('admin',    'admin@example.com',    '$2b$12$xvvH/zvsJIP/iRnJnUq2kes4CYnauZ2RWgJBZf2orfY6.ZnxTMecy', 'admin',    'Демо-адмін платформи'),
+    ('artist',   'artist@example.com',   '$2b$12$ew/Suo6lL1zw3M8ftAoUk.GmKx8O9xKqL.MpD76EWr8O7MbdzanHO', 'listener', 'Демо-юзер для тестування artist-флоу'),
+    ('listener', 'listener@example.com', '$2b$12$Ru5P3dxNQD.xwG8xJyF.tOxL4zIvMAR5bH69cPeY09mWSrLm8J5F2', 'listener', 'Звичайний слухач'),
+    ('critic',   'critic@example.com',   '$2b$12$W9o5OH12fWqPdbkAcRynCeERvnOxjE2fZsECtzWVs.bLHkj4k9QPG', 'listener', 'Любитель писати розгорнуті рецензії');

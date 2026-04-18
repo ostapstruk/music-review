@@ -1,6 +1,18 @@
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
-from app.models import Review, ReviewLike, Track, User
+from app.models import Artist, Review, ReviewLike, Track, User
+
+
+def _get_verified_user_ids(db: Session, user_ids: set[int]) -> set[int]:
+    """Знаходить серед заданих юзерів тих, хто володіє артистом."""
+    if not user_ids:
+        return set()
+    rows = db.execute(
+        select(Artist.claimed_by_user_id).where(
+            Artist.claimed_by_user_id.in_(user_ids)
+        )
+    ).scalars().all()
+    return set(rows)
 
 class TrackNotFoundError(Exception):
     pass
@@ -72,14 +84,16 @@ def create_review(
     db.add(activity)
     db.commit()
     
-    # 5. Повертаємо з username
-    
-    # 4. Повертаємо з username
-    username = db.execute(
-        select(User.username).where(User.id == user_id)
-    ).scalar_one()
-    
-    return _review_to_dict(review, username)
+    # 5. Повертаємо з username, роллю та статусом верифікації
+    row = db.execute(
+        select(User.username, User.role).where(User.id == user_id)
+    ).one()
+    username, role = row
+    verified = bool(_get_verified_user_ids(db, {user_id}))
+
+    return _review_to_dict(
+        review, username, role=role, is_verified_artist=verified,
+    )
 
 
 def get_reviews_for_track(
@@ -111,6 +125,7 @@ def get_reviews_for_track(
             Review,
             User.username,
             User.avatar_url,
+            User.role,
             func.coalesce(likes_sub.c.likes_count, 0).label("likes_count"),
             func.coalesce(likes_sub.c.dislikes_count, 0).label("dislikes_count"),
         )
@@ -125,12 +140,18 @@ def get_reviews_for_track(
         .limit(limit)
         .offset(offset)
     )
-    
+
     rows = db.execute(stmt).all()
-    
+    user_ids = {review.user_id for review, *_ in rows}
+    verified_ids = _get_verified_user_ids(db, user_ids)
+
     return [
-        _review_to_dict(review, username, likes, dislikes, avatar_url)
-        for review, username, avatar_url, likes, dislikes in rows
+        _review_to_dict(
+            review, username, likes, dislikes, avatar_url,
+            role=role,
+            is_verified_artist=review.user_id in verified_ids,
+        )
+        for review, username, avatar_url, role, likes, dislikes in rows
     ]
 
 def get_reviews_by_user(
@@ -141,7 +162,13 @@ def get_reviews_by_user(
 ) -> list[dict]:
     """Повертає рецензії конкретного користувача (для профілю)."""
     stmt = (
-        select(Review, User.username, Track.title.label("track_title"), Track.cover_url.label("track_cover"))
+        select(
+            Review,
+            User.username,
+            User.role,
+            Track.title.label("track_title"),
+            Track.cover_url.label("track_cover"),
+        )
         .join(User, Review.user_id == User.id)
         .join(Track, Review.track_id == Track.id)
         .where(Review.user_id == user_id)
@@ -149,15 +176,18 @@ def get_reviews_by_user(
         .limit(limit)
         .offset(offset)
     )
-    
+
     rows = db.execute(stmt).all()
+    verified = bool(_get_verified_user_ids(db, {user_id}))
     return [
         {
-            **_review_to_dict(review, username),
+            **_review_to_dict(
+                review, username, role=role, is_verified_artist=verified,
+            ),
             "track_title": track_title,
             "track_cover": track_cover,
         }
-        for review, username, track_title, track_cover in rows
+        for review, username, role, track_title, track_cover in rows
     ]
 
 def _review_to_dict(
@@ -166,6 +196,8 @@ def _review_to_dict(
     likes_count: int = 0,
     dislikes_count: int = 0,
     avatar_url: str | None = None,
+    role: str | None = None,
+    is_verified_artist: bool = False,
 ) -> dict:
     """Допоміжна функція — перетворює Review на словник."""
     return {
@@ -178,6 +210,8 @@ def _review_to_dict(
         "updated_at": review.updated_at,
         "username": username,
         "avatar_url": avatar_url,
+        "role": role,
+        "is_verified_artist": is_verified_artist,
         "likes_count": likes_count,
         "dislikes_count": dislikes_count,
     }
@@ -254,22 +288,27 @@ def get_rating_distribution(db: Session, track_id: int) -> list[dict]:
     dist_map = {r: c for r, c in rows}
     return [{"rating": r, "count": dist_map.get(r, 0)} for r in range(10, 0, -1)]
 
-def delete_review(db: Session, review_id: int, user_id: int) -> bool:
+def delete_review(
+    db: Session,
+    review_id: int,
+    user_id: int,
+    is_admin: bool = False,
+) -> bool:
     """
-    Видаляє рецензію. Тільки автор може видалити свою рецензію.
+    Видаляє рецензію. Автор може видалити лише свою; адмін — будь-яку.
     Повертає True якщо видалено, False якщо не знайдено.
-    Кидає PermissionError якщо чужа рецензія.
+    Кидає PermissionError якщо це не свій запис і не адмін.
     """
     review = db.execute(
         select(Review).where(Review.id == review_id)
     ).scalar_one_or_none()
-    
+
     if review is None:
         return False
-    
-    if review.user_id != user_id:
+
+    if not is_admin and review.user_id != user_id:
         raise PermissionError("Cannot delete another user's review")
-    
+
     db.delete(review)
     db.commit()
     return True

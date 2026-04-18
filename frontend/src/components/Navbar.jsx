@@ -4,8 +4,9 @@ import { statsAPI } from '../api/client';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
 import { useSpeech } from '../context/SpeechContext';
-import { FiMusic, FiLogIn, FiLogOut, FiUser, FiPlus, FiSun, FiMoon, FiEye, FiHeart, FiThumbsDown, FiVolume2 } from 'react-icons/fi';
+import { FiMusic, FiLogIn, FiLogOut, FiUser, FiPlus, FiSun, FiMoon, FiEye, FiHeart, FiThumbsDown, FiVolume2, FiShield, FiCheck } from 'react-icons/fi';
 import Speakable from './Speakable';
+import RoleBadge from './RoleBadge';
 
 const THEMES = [
   { id: 'dark', icon: FiMoon, label: 'Темна' },
@@ -103,6 +104,16 @@ export default function Navbar() {
 
           {user ? (
             <>
+              {(user.role === 'artist' || user.is_verified_artist) && (
+                <Link to="/artist" className="nav-link" title="Кабінет артиста">
+                  <FiCheck size={14} /> Кабінет
+                </Link>
+              )}
+              {user.role === 'admin' && (
+                <Link to="/admin/claims" className="nav-link" title="Заявки артистів">
+                  <FiShield size={14} /> Адмін
+                </Link>
+              )}
               <Speakable text="Додати новий трек">
                 <Link to="/tracks/new" className="btn btn-sm btn-primary">
                   <FiPlus size={16} />
@@ -116,6 +127,12 @@ export default function Navbar() {
                   <UserAvatar username={user.username} size={22} />
                 )}
                 {user.username}
+                {user.role && user.role !== 'listener' && (
+                  <RoleBadge role={user.role} showLabel={false} />
+                )}
+                {user.is_verified_artist && user.role !== 'artist' && (
+                  <RoleBadge role="artist" showLabel={false} />
+                )}
                 {(likesCount > 0 || dislikesCount > 0) && (
                   <span className="likes-badge">
                     {likesCount > 0 && <><FiHeart size={10} /> {likesCount}</>}

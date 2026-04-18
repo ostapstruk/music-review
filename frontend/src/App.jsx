@@ -11,6 +11,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import ArtistDetail from './pages/ArtistDetail';
+import ArtistDashboard from './pages/ArtistDashboard';
+import AdminClaims from './pages/AdminClaims';
 import ScrollToTop from './components/ScrollToTop';
 import { SpeechProvider } from './context/SpeechContext';
 import PublicProfile from './pages/PublicProfile';
@@ -32,6 +34,8 @@ export default function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/artists/:id" element={<ArtistDetail />} />
+            <Route path="/artist" element={<ArtistDashboard />} />
+            <Route path="/admin/claims" element={<AdminClaims />} />
             <Route path="/users/:id" element={<PublicProfile />} />
           </Routes>
         </main>

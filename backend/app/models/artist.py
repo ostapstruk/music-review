@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, String, Text, func
+from sqlalchemy import BigInteger, DateTime, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -8,9 +8,9 @@ from app.core.database import Base
 
 class Artist(Base):
     """Артист / виконавець."""
-    
+
     __tablename__ = "artists"
-    
+
     id: Mapped[int] = mapped_column(
         BigInteger, primary_key=True, autoincrement=True,
     )
@@ -26,9 +26,15 @@ class Artist(Base):
     image_url: Mapped[str | None] = mapped_column(
         String(500), nullable=True,
     )
+    claimed_by_user_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        unique=True,
+        nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(),
     )
-    
+
     def __repr__(self) -> str:
         return f"<Artist(id={self.id}, name={self.name!r})>"

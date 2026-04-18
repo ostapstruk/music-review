@@ -1,4 +1,4 @@
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
@@ -45,18 +45,22 @@ def create_user(db: Session, data: UserCreate) -> User:
     
     # 2. Хешуємо пароль.
     password_hash = hash_password(data.password)
-    
-    # 3. Створюємо ORM-об'єкт.
+
+    # 3. Перший юзер у системі автоматично стає адміном — щоб не пушити SQL руками.
+    is_first_user = db.execute(select(func.count(User.id))).scalar_one() == 0
+    role = "admin" if is_first_user else "listener"
+
+    # 4. Створюємо ORM-об'єкт.
     user = User(
         username=data.username,
         email=data.email,
         password_hash=password_hash,
-        # role не вказуємо — спрацює default="listener"
+        role=role,
     )
-    
-    # 4. Додаємо в сесію і комітимо.
+
+    # 5. Додаємо в сесію і комітимо.
     db.add(user)
     db.commit()
     db.refresh(user)  # оновлюємо об'єкт, щоб забрати id та created_at з БД
-    
+
     return user

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiStar, FiMessageSquare, FiTrendingUp, FiUser, FiEdit2 } from 'react-icons/fi';
+import { FiStar, FiMessageSquare, FiTrendingUp, FiUser, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { reviewsAPI, authAPI } from '../api/client';
 import usePageTitle from '../utils/usePageTitle';
+import RoleBadge from '../components/RoleBadge';
 
 export default function Profile() {
   const { user, refreshUser } = useAuth();
@@ -16,16 +17,33 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
 
   usePageTitle(user ? user.username : 'Профіль');
-  
+
+  const loadReviews = () => {
+    if (!user) return;
+    return reviewsAPI
+      .getForUser(user.id)
+      .then((res) => setReviews(res.data))
+      .catch(console.error);
+  };
+
   useEffect(() => {
     if (user) {
-      reviewsAPI
-        .getForUser(user.id)
-        .then((res) => setReviews(res.data))
-        .catch(console.error)
-        .finally(() => setLoading(false));
+      loadReviews().finally(() => setLoading(false));
     }
   }, [user]);
+
+  const handleDeleteReview = async (e, reviewId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!window.confirm('Видалити цю рецензію?')) return;
+    try {
+      await reviewsAPI.delete(reviewId);
+      toast.success('Рецензію видалено');
+      await loadReviews();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Помилка');
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -82,9 +100,25 @@ export default function Profile() {
           )}
         </div>
         <div className="profile-info">
-          <h1 className="profile-name">{user.username}</h1>
+          <div className="profile-name-row">
+            <h1 className="profile-name">{user.username}</h1>
+            <RoleBadge role={user.role} size="lg" />
+            {user.is_verified_artist && user.role !== 'artist' && (
+              <RoleBadge role="artist" size="lg" />
+            )}
+          </div>
           <p className="profile-email">{user.email}</p>
-          <span className="profile-role">{user.role}</span>
+
+          {(user.role === 'artist' || user.is_verified_artist) && (
+            <Link to="/artist" className="btn btn-sm btn-secondary" style={{ marginTop: 8, marginRight: 8 }}>
+              Кабінет артиста
+            </Link>
+          )}
+          {user.role === 'admin' && (
+            <Link to="/admin/claims" className="btn btn-sm btn-secondary" style={{ marginTop: 8, marginRight: 8 }}>
+              Заявки артистів
+            </Link>
+          )}
 
           {!editing ? (
             <>
@@ -165,6 +199,14 @@ export default function Profile() {
               )}>
                 {r.rating}/10
               </span>
+              <button
+                className="vote-btn delete-btn review-profile-delete"
+                onClick={(e) => handleDeleteReview(e, r.id)}
+                title="Видалити рецензію"
+                aria-label="Видалити рецензію"
+              >
+                <FiTrash2 size={14} />
+              </button>
             </Link>
           ))}
         </div>

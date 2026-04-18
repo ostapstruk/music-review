@@ -147,6 +147,24 @@ def create_track_manually(db: Session, data: TrackCreate) -> Track:
     
     return track
 
+def delete_track(db: Session, track_id: int) -> bool:
+    """
+    Видаляє трек повністю. Усі рецензії знесуться каскадом
+    (FK reviews.track_id ON DELETE CASCADE).
+    Повертає True якщо видалено, False якщо не знайдено.
+    """
+    track = db.execute(
+        select(Track).where(Track.id == track_id)
+    ).scalar_one_or_none()
+
+    if track is None:
+        return False
+
+    db.delete(track)
+    db.commit()
+    return True
+
+
 async def create_track_from_spotify(db: Session, spotify_data: dict) -> Track:
     """
     Створює трек з даних Spotify.
@@ -154,24 +172,47 @@ async def create_track_from_spotify(db: Session, spotify_data: dict) -> Track:
     Підтягує audio features.
     """
     from app.services.spotify_service import spotify_client
-    
+
     # Перевіряємо, чи трек вже є
     existing = db.execute(
         select(Track).where(Track.spotify_id == spotify_data["spotify_id"])
     ).scalar_one_or_none()
-    
+
     if existing:
         return existing
-    
-    # Знайти або створити артиста
-    artist = db.execute(
-        select(Artist).where(Artist.name == spotify_data["artist_name"])
-    ).scalar_one_or_none()
-    
+
+    artist_spotify_id = spotify_data.get("artist_spotify_id")
+
+    # Знайти артиста: спершу за spotify_id (надійніше), потім за іменем.
+    artist = None
+    if artist_spotify_id:
+        artist = db.execute(
+            select(Artist).where(Artist.spotify_id == artist_spotify_id)
+        ).scalar_one_or_none()
+
     if artist is None:
-        artist = Artist(name=spotify_data["artist_name"])
+        artist = db.execute(
+            select(Artist).where(Artist.name == spotify_data["artist_name"])
+        ).scalar_one_or_none()
+
+    if artist is None:
+        artist = Artist(
+            name=spotify_data["artist_name"],
+            spotify_id=artist_spotify_id,
+        )
         db.add(artist)
         db.flush()
+    else:
+        # Бекфіл, якщо запис був без spotify_id або без зображення
+        if not artist.spotify_id and artist_spotify_id:
+            artist.spotify_id = artist_spotify_id
+        if not artist.image_url and artist_spotify_id:
+            try:
+                meta = await spotify_client.get_artist(artist_spotify_id)
+                if meta and meta.get("image_url"):
+                    artist.image_url = meta["image_url"]
+            except Exception:
+                pass
     
     # Знайти або створити альбом
     album_id = None

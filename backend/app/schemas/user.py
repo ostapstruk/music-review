@@ -30,7 +30,7 @@ class UserRead(BaseModel):
     Схема користувача для відповідей API.
     НЕ містить password_hash.
     """
-    
+
     id: int
     username: str
     email: EmailStr
@@ -38,11 +38,24 @@ class UserRead(BaseModel):
     avatar_url: str | None
     bio: str | None
     created_at: datetime
-    
+    is_verified_artist: bool = False
+
     model_config = ConfigDict(from_attributes=True)
 
 class UserUpdate(BaseModel):
     """Схема для оновлення профілю."""
-    
+
     bio: str | None = Field(None, max_length=500)
     avatar_url: str | None = Field(None, max_length=500)
+
+
+class PublicUserRead(UserRead):
+    """
+    Розширена відповідь для публічного профілю: додає інфо про артиста,
+    яким володіє юзер (якщо володіє), щоб фронт міг показати кнопку
+    «публічна сторінка артиста» без додаткового запиту.
+    """
+
+    artist_id: int | None = None
+    artist_name: str | None = None
+    artist_image_url: str | None = None
