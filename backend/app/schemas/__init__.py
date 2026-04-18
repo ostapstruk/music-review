@@ -3,7 +3,7 @@ from app.schemas.auth import LoginRequest, TokenResponse
 from app.schemas.badge import BadgeRead
 from app.schemas.genre import GenreRead
 from app.schemas.review import ReviewCreate, ReviewRead
-from app.schemas.track import TrackCreate, TrackDetail, TrackRead, TrackTrending
+from app.schemas.track import SpotifySearchResult, TrackCreate, TrackDetail, TrackRead, TrackTrending
 from app.schemas.user import UserCreate, UserRead
 
 
@@ -14,6 +14,7 @@ __all__ = [
     "LoginRequest",
     "ReviewCreate",
     "ReviewRead",
+    "SpotifySearchResult",
     "TokenResponse",
     "TrackCreate",
     "TrackDetail",

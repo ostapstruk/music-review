@@ -146,3 +146,78 @@ def create_track_manually(db: Session, data: TrackCreate) -> Track:
     db.refresh(track)
     
     return track
+
+async def create_track_from_spotify(db: Session, spotify_data: dict) -> Track:
+    """
+    Створює трек з даних Spotify.
+    Автоматично створює артиста і альбом, якщо не існують.
+    Підтягує audio features.
+    """
+    from app.services.spotify_service import spotify_client
+    
+    # Перевіряємо, чи трек вже є
+    existing = db.execute(
+        select(Track).where(Track.spotify_id == spotify_data["spotify_id"])
+    ).scalar_one_or_none()
+    
+    if existing:
+        return existing
+    
+    # Знайти або створити артиста
+    artist = db.execute(
+        select(Artist).where(Artist.name == spotify_data["artist_name"])
+    ).scalar_one_or_none()
+    
+    if artist is None:
+        artist = Artist(name=spotify_data["artist_name"])
+        db.add(artist)
+        db.flush()
+    
+    # Знайти або створити альбом
+    album_id = None
+    if spotify_data.get("album_title"):
+        album = db.execute(
+            select(Album).where(
+                Album.title == spotify_data["album_title"],
+                Album.artist_id == artist.id,
+            )
+        ).scalar_one_or_none()
+        
+        if album is None:
+            album = Album(
+                artist_id=artist.id,
+                title=spotify_data["album_title"],
+                release_year=spotify_data.get("release_year"),
+            )
+            db.add(album)
+            db.flush()
+        album_id = album.id
+    
+    # Створюємо трек
+    track = Track(
+        artist_id=artist.id,
+        album_id=album_id,
+        title=spotify_data["title"],
+        spotify_id=spotify_data["spotify_id"],
+        duration_ms=spotify_data.get("duration_ms"),
+        cover_url=spotify_data.get("cover_url"),
+        preview_url=spotify_data.get("preview_url"),
+    )
+    
+    # Підтягуємо audio features
+    try:
+        features = await spotify_client.get_track_features(spotify_data["spotify_id"])
+        if features:
+            track.danceability = features.get("danceability")
+            track.energy = features.get("energy")
+            track.acousticness = features.get("acousticness")
+            track.valence = features.get("valence")
+            track.tempo = features.get("tempo")
+    except Exception:
+        pass  # Audio features не критичні
+    
+    db.add(track)
+    db.commit()
+    db.refresh(track)
+    
+    return track

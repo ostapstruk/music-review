@@ -2,10 +2,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """
-    Конфігурація застосунку.
-    Значення читаються з файлу .env у папці backend/.
-    """
+    """Конфігурація застосунку."""
     
     # Database
     DATABASE_URL: str
@@ -19,6 +16,10 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     JWT_ALGORITHM: str = "HS256"
+    
+    # Spotify
+    SPOTIFY_CLIENT_ID: str = ""
+    SPOTIFY_CLIENT_SECRET: str = ""
     
     model_config = SettingsConfigDict(
         env_file=".env",
