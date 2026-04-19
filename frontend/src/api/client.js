@@ -71,6 +71,8 @@ export const reviewsAPI = {
 
   like: (reviewId) => api.post(`/reviews/like/${reviewId}`),
   dislike: (reviewId) => api.post(`/reviews/dislike/${reviewId}`),
+
+  getDistribution: (trackId) => api.get(`/reviews/distribution/${trackId}`),
 };
 
 // ============================================================================

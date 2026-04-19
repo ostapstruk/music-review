@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiTrendingUp, FiStar } from 'react-icons/fi';
+import { FiTrendingUp, FiStar, FiAward } from 'react-icons/fi';
 import { tracksAPI } from '../api/client';
 import ActivityFeed from '../components/ActivityFeed';
 
@@ -24,8 +24,40 @@ export default function Home() {
     );
   }
 
+  // Трек місяця — перший у trending (найвищий score)
+  const trackOfMonth = trending.length > 0 ? trending[0] : null;
+
   return (
     <div className="page">
+      {/* ===== БАНЕР "ТРЕК МІСЯЦЯ" ===== */}
+      {trackOfMonth && (
+        <Link to={`/tracks/${trackOfMonth.id}`} className="hero-banner">
+          <div className="hero-bg"
+            style={trackOfMonth.cover_url ? {
+              backgroundImage: `url(${trackOfMonth.cover_url})`,
+            } : {}}
+          />
+          <div className="hero-content">
+            <span className="hero-label">
+              <FiAward size={16} />
+              Трек місяця
+            </span>
+            <h2 className="hero-title">{trackOfMonth.title}</h2>
+            <p className="hero-artist">{trackOfMonth.artist_name}</p>
+            <div className="hero-stats">
+              <span className={`rating-badge ${
+                trackOfMonth.avg_rating >= 8 ? 'rating-high' : 
+                trackOfMonth.avg_rating >= 5 ? 'rating-mid' : 'rating-low'
+              }`}>
+                {trackOfMonth.avg_rating?.toFixed(1)}
+              </span>
+              <span className="hero-reviews">{trackOfMonth.reviews_count} рецензій</span>
+            </div>
+          </div>
+        </Link>
+      )}
+
+      {/* ===== ГАРЯЧИЙ ЧАРТ ===== */}
       <h1 className="page-title">
         <FiTrendingUp style={{ verticalAlign: 'middle', marginRight: 10 }} />
         Гарячий чарт
