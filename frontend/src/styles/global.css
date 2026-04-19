@@ -863,3 +863,63 @@ textarea.input {
     flex-shrink: 0;
     margin-left: 12px;
 }
+
+/* ---------- AI Summary ---------- */
+.ai-summary {
+    margin-bottom: 24px;
+    border-color: var(--accent);
+    border-width: 1px;
+}
+
+.ai-summary-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.ai-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.ai-refresh {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    color: var(--text-muted);
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.ai-refresh:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.ai-summary-text {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+}
+
+.ai-summary-loading {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+.ai-summary-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}

@@ -94,4 +94,12 @@ export const activityAPI = {
     api.get('/activity/', { params: { limit } }),
 };
 
+// ============================================================================
+// AI
+// ============================================================================
+
+export const aiAPI = {
+  getSummary: (trackId) => api.get(`/ai/summary/${trackId}`),
+};
+
 export default api;

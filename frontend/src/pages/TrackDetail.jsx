@@ -5,6 +5,7 @@ import { tracksAPI, reviewsAPI } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import ReviewCard from '../components/ReviewCard';
 import ReviewForm from '../components/ReviewForm';
+import AISummary from '../components/AISummary';
 
 export default function TrackDetail() {
   const { id } = useParams();
@@ -132,6 +133,9 @@ export default function TrackDetail() {
           </div>
         </div>
       )}
+
+      {/* ===== ШІ-САМАРІ ===== */}
+      <AISummary trackId={track.id} />
 
       {/* ===== ФОРМА РЕЦЕНЗІЇ ===== */}
       {user && !hasReviewed && (
