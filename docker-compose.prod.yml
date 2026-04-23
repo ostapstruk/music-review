@@ -61,15 +61,33 @@ services:
         VITE_API_URL: /api/v1
     container_name: musicreview_frontend
     restart: unless-stopped
-    ports:
-      # Єдиний публічний порт. Якщо ставиш Caddy/Traefik для TLS — змінюй на "127.0.0.1:8080:80"
-      # і маршрутизуй через reverse-proxy.
-      - "80:80"
+    # Публічно не виставляємо — Caddy спереду на 80/443.
+    expose:
+      - "80"
     depends_on:
       - backend
 
+  caddy:
+    image: caddy:2-alpine
+    container_name: musicreview_caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"  # HTTP/3 (QUIC)
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL:-admin@musicreview.online}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+
 volumes:
   postgres_data:
+  caddy_data:
+  caddy_config:
 
 # Якщо хочеш моніторинг у проді — розкоментуй блок нижче.
 # Зважай: 9090/3001 будуть відкриті в інет, постав хоча б basic-auth у nginx або

@@ -1,0 +1,34 @@
+# Caddy config for production deployment.
+# Caddy автоматично отримує і поновлює Let's Encrypt-сертифікати
+# для усіх перерахованих доменів. Email для ACME-реєстрації береться
+# зі змінної середовища ACME_EMAIL (опційно — без неї використовується
+# дефолтний flow).
+#
+# Запуск:
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Перевірка:
+#   curl -I https://musicreview.online
+#   має повернути 200 і HTTP/2
+
+{
+    # Email для Let's Encrypt-сповіщень про сертифікати
+    email {$ACME_EMAIL:admin@musicreview.online}
+}
+
+# Основний домен + www-альтернатива.
+musicreview.online, www.musicreview.online {
+    # Gzip-стиснення статики, щоб менше трафіку на мобільних
+    encode gzip zstd
+
+    # Безпечні заголовки для HTTPS
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        # Дозволяє Spotify-iframe / Deezer-плеєр (для прев’ю)
+        X-Frame-Options "SAMEORIGIN"
+    }
+
+    reverse_proxy frontend:80
+}
