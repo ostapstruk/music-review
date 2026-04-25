@@ -1,4 +1,4 @@
-import { FiThumbsUp, FiThumbsDown, FiUser, FiVolume2 } from 'react-icons/fi';
+import { FiThumbsUp, FiThumbsDown, FiUser, FiVolume2, FiTrash2 } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import { reviewsAPI } from '../api/client';
 import toast from 'react-hot-toast';
@@ -10,9 +10,7 @@ export default function ReviewCard({ review, onUpdate }) {
     if (!user) return toast.error('Увійдіть, щоб голосувати');
     try {
       const res = await reviewsAPI.like(review.id);
-      toast.success(
-        res.data.status === 'removed' ? 'Голос знято' : 'Лайк!'
-      );
+      toast.success(res.data.status === 'removed' ? 'Голос знято' : 'Лайк!');
       if (onUpdate) onUpdate();
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Помилка');
@@ -23,36 +21,38 @@ export default function ReviewCard({ review, onUpdate }) {
     if (!user) return toast.error('Увійдіть, щоб голосувати');
     try {
       const res = await reviewsAPI.dislike(review.id);
-      toast.success(
-        res.data.status === 'removed' ? 'Голос знято' : 'Дизлайк'
-      );
+      toast.success(res.data.status === 'removed' ? 'Голос знято' : 'Дизлайк');
       if (onUpdate) onUpdate();
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Помилка');
     }
   };
 
-  // TTS — озвучка рецензії
+  const handleDelete = async () => {
+    if (!window.confirm('Видалити цю рецензію?')) return;
+    try {
+      await reviewsAPI.delete(review.id);
+      toast.success('Рецензію видалено');
+      if (onUpdate) onUpdate();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Помилка');
+    }
+  };
+
   const handleSpeak = () => {
     if (!review.text) return toast.error('Немає тексту для озвучки');
-    
-    // Зупиняємо попередню озвучку (якщо була)
     window.speechSynthesis.cancel();
-    
     const utterance = new SpeechSynthesisUtterance(review.text);
     utterance.lang = 'uk-UA';
-    utterance.rate = 0.9; // трохи повільніше для кращого сприйняття
-    
+    utterance.rate = 0.9;
     window.speechSynthesis.speak(utterance);
     toast.success('Озвучка запущена');
   };
 
+  const isOwner = user && user.id === review.user_id;
+
   const ratingClass =
-    review.rating >= 8
-      ? 'rating-high'
-      : review.rating >= 5
-      ? 'rating-mid'
-      : 'rating-low';
+    review.rating >= 8 ? 'rating-high' : review.rating >= 5 ? 'rating-mid' : 'rating-low';
 
   return (
     <div className="review-card card">
@@ -61,9 +61,7 @@ export default function ReviewCard({ review, onUpdate }) {
           <FiUser size={16} />
           <span className="review-username">{review.username || 'Анонім'}</span>
         </div>
-        <span className={`rating-badge ${ratingClass}`}>
-          {review.rating}/10
-        </span>
+        <span className={`rating-badge ${ratingClass}`}>{review.rating}/10</span>
       </div>
 
       {review.text && <p className="review-text">{review.text}</p>}
@@ -79,8 +77,13 @@ export default function ReviewCard({ review, onUpdate }) {
             <span>{review.dislikes_count || 0}</span>
           </button>
           {review.text && (
-            <button className="vote-btn" onClick={handleSpeak} title="Озвучити рецензію">
+            <button className="vote-btn" onClick={handleSpeak} title="Озвучити">
               <FiVolume2 size={14} />
+            </button>
+          )}
+          {isOwner && (
+            <button className="vote-btn delete-btn" onClick={handleDelete} title="Видалити">
+              <FiTrash2 size={14} />
             </button>
           )}
         </div>

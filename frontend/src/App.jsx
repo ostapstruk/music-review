@@ -10,6 +10,7 @@ import AddTrack from './pages/AddTrack';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
+import ArtistDetail from './pages/ArtistDetail';
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/artists/:id" element={<ArtistDetail />} />
           </Routes>
         </main>
         <Footer />

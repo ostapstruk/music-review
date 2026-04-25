@@ -20,8 +20,10 @@ export default function Navbar() {
   }, [highContrast]);
 
   const handleLogout = () => {
-    logout();
-    navigate('/');
+    if (window.confirm('Ви впевнені, що хочете вийти?')) {
+      logout();
+      navigate('/');
+    }
   };
 
   return (

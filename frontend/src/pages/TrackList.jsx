@@ -3,10 +3,18 @@ import { Link } from 'react-router-dom';
 import { FiStar, FiSearch } from 'react-icons/fi';
 import { tracksAPI } from '../api/client';
 
+const SORT_OPTIONS = [
+  { value: 'date', label: 'За датою' },
+  { value: 'rating', label: 'За рейтингом' },
+  { value: 'reviews', label: 'За кількістю рецензій' },
+  { value: 'title', label: 'За назвою' },
+];
+
 export default function TrackList() {
   const [tracks, setTracks] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('date');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,19 +29,34 @@ export default function TrackList() {
   }, []);
 
   useEffect(() => {
+    let result = [...tracks];
+
+    // Фільтр пошуку
     const q = search.toLowerCase();
-    if (!q) {
-      setFiltered(tracks);
-    } else {
-      setFiltered(
-        tracks.filter(
-          (t) =>
-            t.title.toLowerCase().includes(q) ||
-            (t.artist_name && t.artist_name.toLowerCase().includes(q))
-        )
+    if (q) {
+      result = result.filter(
+        (t) =>
+          t.title.toLowerCase().includes(q) ||
+          (t.artist_name && t.artist_name.toLowerCase().includes(q))
       );
     }
-  }, [search, tracks]);
+
+    // Сортування
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case 'rating':
+          return (b.avg_rating || 0) - (a.avg_rating || 0);
+        case 'reviews':
+          return (b.reviews_count || 0) - (a.reviews_count || 0);
+        case 'title':
+          return a.title.localeCompare(b.title);
+        default: // date
+          return b.id - a.id;
+      }
+    });
+
+    setFiltered(result);
+  }, [search, sortBy, tracks]);
 
   if (loading) return <div className="loading"><div className="spinner" /></div>;
 
@@ -41,18 +64,9 @@ export default function TrackList() {
     <div className="page">
       <h1 className="page-title">Усі треки</h1>
 
-      <div className="search-bar" style={{ marginBottom: 24 }}>
-        <div style={{ position: 'relative', flex: 1 }}>
-          <FiSearch
-            size={18}
-            style={{
-              position: 'absolute',
-              left: 14,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: 'var(--text-muted)',
-            }}
-          />
+      <div className="tracks-controls">
+        <div className="search-input-wrapper">
+          <FiSearch size={18} className="search-icon" />
           <input
             type="text"
             className="input"
@@ -61,6 +75,18 @@ export default function TrackList() {
             onChange={(e) => setSearch(e.target.value)}
             style={{ paddingLeft: 42 }}
           />
+        </div>
+
+        <div className="sort-buttons">
+          {SORT_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              className={`btn btn-sm ${sortBy === opt.value ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setSortBy(opt.value)}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
       </div>
 
