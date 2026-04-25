@@ -194,6 +194,19 @@ async def create_track_from_spotify(db: Session, spotify_data: dict) -> Track:
         album_id = album.id
     
     # Створюємо трек
+    preview_url = spotify_data.get("preview_url")
+    
+    # Якщо Spotify не дав preview — шукаємо через Deezer
+    if not preview_url:
+        from app.services.spotify_service import fetch_deezer_preview
+        try:
+            preview_url = await fetch_deezer_preview(
+                spotify_data["title"],
+                spotify_data["artist_name"],
+            )
+        except Exception:
+            pass
+    
     track = Track(
         artist_id=artist.id,
         album_id=album_id,
@@ -201,7 +214,7 @@ async def create_track_from_spotify(db: Session, spotify_data: dict) -> Track:
         spotify_id=spotify_data["spotify_id"],
         duration_ms=spotify_data.get("duration_ms"),
         cover_url=spotify_data.get("cover_url"),
-        preview_url=spotify_data.get("preview_url"),
+        preview_url=preview_url,
     )
     
     # Підтягуємо audio features

@@ -142,3 +142,26 @@ class SpotifyClient:
 
 # Один екземпляр на весь додаток (кешує токен)
 spotify_client = SpotifyClient()
+
+async def fetch_deezer_preview(title: str, artist: str) -> str | None:
+    """
+    Шукає 30-секундний preview треку через Deezer API.
+    Deezer API безкоштовний і не потребує ключів.
+    Використовується як fallback, коли Spotify не дає preview_url.
+    """
+    query = f"{title} {artist}"
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://api.deezer.com/search",
+                params={"q": query, "limit": 1},
+            )
+            response.raise_for_status()
+            data = response.json()
+        
+        items = data.get("data", [])
+        if items and items[0].get("preview"):
+            return items[0]["preview"]
+        return None
+    except Exception:
+        return None

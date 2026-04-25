@@ -34,6 +34,7 @@ class TrackDetail(TrackRead):
     valence: Decimal | None
     tempo: Decimal | None
     created_at: datetime
+    preview_url: str | None = None
     
     # Ці поля будуть обчислюватись бекендом, не з БД напряму
     avg_rating: float | None = None
