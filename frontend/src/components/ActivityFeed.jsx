@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FiActivity } from 'react-icons/fi';
 import { activityAPI } from '../api/client';
+import UserAvatar from './UserAvatar';
 
 export default function ActivityFeed() {
   const [events, setEvents] = useState([]);
@@ -34,6 +35,7 @@ export default function ActivityFeed() {
       <div className="activity-list">
         {events.map((event) => (
           <div key={event.id} className="activity-item">
+            <UserAvatar username={event.username} size={24} />
             <span className="activity-text">{event.text}</span>
             <span className="activity-time">{timeAgo(event.created_at)}</span>
           </div>

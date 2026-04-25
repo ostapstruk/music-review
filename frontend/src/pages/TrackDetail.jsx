@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { FiDisc, FiClock, FiStar } from 'react-icons/fi';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { FiDisc, FiClock, FiStar, FiArrowLeft } from 'react-icons/fi';
 import { tracksAPI, reviewsAPI } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import ReviewCard from '../components/ReviewCard';
@@ -11,6 +11,7 @@ import AudioPlayer from '../components/AudioPlayer';
 
 export default function TrackDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [track, setTrack] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -50,7 +51,6 @@ export default function TrackDetail() {
     );
   }
 
-  // Форматуємо тривалість
   const formatDuration = (ms) => {
     if (!ms) return null;
     const min = Math.floor(ms / 60000);
@@ -58,7 +58,6 @@ export default function TrackDetail() {
     return `${min}:${sec.toString().padStart(2, '0')}`;
   };
 
-  // Перевіряємо, чи поточний юзер вже написав рецензію
   const hasReviewed = user && reviews.some((r) => r.user_id === user.id);
 
   const ratingClass =
@@ -70,6 +69,11 @@ export default function TrackDetail() {
 
   return (
     <div className="page track-detail">
+      <button className="back-btn" onClick={() => navigate(-1)}>
+        <FiArrowLeft size={18} />
+        Назад
+      </button>
+
       {/* ===== ШАПКА ===== */}
       <div className="track-hero">
         <div className="track-hero-cover">
@@ -111,7 +115,7 @@ export default function TrackDetail() {
         </div>
       </div>
 
-      {/* ===== AUDIO FEATURES (радарна діаграма — спрощена версія) ===== */}
+      {/* ===== AUDIO FEATURES ===== */}
       {(track.danceability || track.energy || track.acousticness || track.valence) && (
         <div className="card audio-features">
           <h3 style={{ marginBottom: 16 }}>ДНК музики</h3>
@@ -138,10 +142,9 @@ export default function TrackDetail() {
         </div>
       )}
 
-
       {/* ===== АУДІО ПЛЕЄР ===== */}
       <AudioPlayer previewUrl={track.preview_url} title={track.title} />
-      
+
       {/* ===== ГІСТОГРАМА ===== */}
       <RatingHistogram trackId={track.id} />
 
@@ -194,7 +197,6 @@ export default function TrackDetail() {
   );
 }
 
-// Допоміжний компонент — горизонтальна шкала audio feature
 function FeatureBar({ label, value }) {
   const percent = Math.round(Number(value) * 100);
   return (

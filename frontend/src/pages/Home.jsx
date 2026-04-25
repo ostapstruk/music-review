@@ -80,7 +80,16 @@ export default function Home() {
               key={track.id}
               className="card trending-item"
             >
-              <span className="trending-rank">#{index + 1}</span>
+             <div className="trending-rank-block">
+                <span className="trending-rank">#{index + 1}</span>
+                <span className={`trend-arrow ${
+                  track.recent_reviews >= 2 ? 'trend-up' :
+                  track.recent_reviews === 0 ? 'trend-down' : 'trend-same'
+                }`}>
+                  {track.recent_reviews >= 2 ? '↑' :
+                   track.recent_reviews === 0 ? '↓' : '—'}
+                </span>
+              </div>
 
               <div className="trending-cover">
                 {track.cover_url ? (
