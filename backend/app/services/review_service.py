@@ -268,3 +268,23 @@ def delete_review(db: Session, review_id: int, user_id: int) -> bool:
     db.delete(review)
     db.commit()
     return True
+
+def get_user_votes(db: Session, user_id: int, track_id: int) -> dict:
+    """
+    Повертає голоси юзера за рецензіями конкретного треку.
+    Формат: {review_id: 'like' або 'dislike'}
+    """
+    stmt = (
+        select(ReviewLike.review_id, ReviewLike.is_like)
+        .join(Review, ReviewLike.review_id == Review.id)
+        .where(
+            ReviewLike.user_id == user_id,
+            Review.track_id == track_id,
+        )
+    )
+    rows = db.execute(stmt).all()
+    
+    return {
+        str(review_id): "like" if is_like else "dislike"
+        for review_id, is_like in rows
+    }

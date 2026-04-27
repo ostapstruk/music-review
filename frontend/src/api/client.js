@@ -77,6 +77,8 @@ export const reviewsAPI = {
   getDistribution: (trackId) => api.get(`/reviews/distribution/${trackId}`),
   
   delete: (reviewId) => api.delete(`/reviews/${reviewId}`),
+
+  getMyVotes: (trackId) => api.get(`/reviews/my-votes/${trackId}`),
 };
 
 // ============================================================================
