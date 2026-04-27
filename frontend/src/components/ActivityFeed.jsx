@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { FiActivity } from 'react-icons/fi';
 import { activityAPI } from '../api/client';
 import UserAvatar from './UserAvatar';
+import timeAgo from '../utils/timeAgo';
 
 export default function ActivityFeed() {
   const [events, setEvents] = useState([]);

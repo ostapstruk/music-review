@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiMusic, FiLogIn, FiLogOut, FiUser, FiPlus, FiSun, FiMoon, FiEye } from 'react-icons/fi';
+import { FiMusic, FiLogIn, FiLogOut, FiUser, FiPlus, FiSun, FiMoon, FiEye, FiHeart } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
+import { statsAPI } from '../api/client';
 
 const THEMES = [
   { id: 'dark', icon: FiMoon, label: 'Темна' },
@@ -15,6 +16,7 @@ export default function Navbar() {
   const [theme, setTheme] = useState(
     () => localStorage.getItem('theme') || 'dark'
   );
+  const [likesCount, setLikesCount] = useState(0);
 
   useEffect(() => {
     document.body.classList.remove('light-theme', 'high-contrast');
@@ -25,6 +27,14 @@ export default function Navbar() {
     }
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    if (user) {
+      statsAPI.getMyLikes()
+        .then((res) => setLikesCount(res.data.likes_received))
+        .catch(() => {});
+    }
+  }, [user]);
 
   const cycleTheme = () => {
     const currentIndex = THEMES.findIndex(t => t.id === theme);
@@ -72,6 +82,12 @@ export default function Navbar() {
               <Link to="/profile" className="nav-link nav-user">
                 <FiUser size={16} />
                 {user.username}
+                {likesCount > 0 && (
+                  <span className="likes-badge">
+                    <FiHeart size={10} />
+                    {likesCount}
+                  </span>
+                )}
               </Link>
               <button onClick={handleLogout} className="btn btn-sm btn-secondary">
                 <FiLogOut size={16} />
