@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import usePageTitle from '../utils/usePageTitle';
 
 export default function Register() {
   const [username, setUsername] = useState('');
@@ -11,6 +12,8 @@ export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  usePageTitle('Реєстрація');
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);

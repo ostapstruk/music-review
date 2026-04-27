@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiPlus, FiMusic } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import { tracksAPI } from '../api/client';
+import usePageTitle from '../utils/usePageTitle';
 
 export default function AddTrack() {
   const [query, setQuery] = useState('');
@@ -10,6 +11,8 @@ export default function AddTrack() {
   const [searching, setSearching] = useState(false);
   const [adding, setAdding] = useState(null);
   const navigate = useNavigate();
+
+  usePageTitle('Додати трек');
 
   // --- Вкладки ---
   const [tab, setTab] = useState('spotify');

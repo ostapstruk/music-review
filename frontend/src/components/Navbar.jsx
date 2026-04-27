@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { FiMusic, FiLogIn, FiLogOut, FiUser, FiPlus, FiSun, FiMoon, FiEye, FiHeart, FiThumbsDown } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import { statsAPI } from '../api/client';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 const THEMES = [
   { id: 'dark', icon: FiMoon, label: 'Темна' },
@@ -13,6 +13,7 @@ const THEMES = [
 export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [theme, setTheme] = useState(
     () => localStorage.getItem('theme') || 'dark'
   );
@@ -65,8 +66,12 @@ export default function Navbar() {
         </Link>
 
         <div className="navbar-links">
-          <Link to="/" className="nav-link">Чарт</Link>
-          <Link to="/tracks" className="nav-link">Треки</Link>
+          <Link to="/" className={"nav-link" + (location.pathname === "/" ? " nav-active" : "")}>
+            Чарт
+          </Link>
+          <Link to="/tracks" className={"nav-link" + (location.pathname.startsWith("/tracks") ? " nav-active" : "")}>
+            Треки
+          </Link>
         </div>
 
         <div className="navbar-actions">
