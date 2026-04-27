@@ -52,9 +52,21 @@ class Track(Base):
     tempo: Mapped[Decimal | None] = mapped_column(
         Numeric(5, 2), nullable=True,
     )
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="approved",
+    )
+    submitted_by: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True,
+    )
+    reviewed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+    reviewed_by: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(),
     )
-    
+
     def __repr__(self) -> str:
-        return f"<Track(id={self.id}, title={self.title!r})>"
+        return f"<Track(id={self.id}, title={self.title!r}, status={self.status!r})>"

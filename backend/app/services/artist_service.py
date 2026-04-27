@@ -217,10 +217,19 @@ def reject_claim(db: Session, claim_id: int, admin_id: int) -> ArtistClaim:
     return claim
 
 
-async def sync_artist_tracks(db: Session, user_id: int) -> dict:
+async def sync_artist_tracks(
+    db: Session,
+    user_id: int,
+    *,
+    auto_approve: bool = False,
+) -> dict:
     """
     Тягне топ-треки привʼязаного артиста зі Spotify і додає ті, яких ще нема.
     Існуючі треки (з тим самим spotify_id) пропускаємо.
+
+    Якщо auto_approve=False (звичайний верифікований артист) — створені треки
+    отримують статус 'pending' і потрапляють на адмін-модерацію.
+    Якщо auto_approve=True (адмін синкає) — одразу 'approved'.
     """
     artist = get_my_artist(db, user_id)
     if artist is None:
@@ -246,9 +255,12 @@ async def sync_artist_tracks(db: Session, user_id: int) -> dict:
             skipped += 1
             continue
 
-        # create_track_from_spotify сам впорається з артистом/альбомом/audio features.
-        # Артист зматчиться за іменем (як зараз робить track_service).
-        await create_track_from_spotify(db, spotify_track)
+        await create_track_from_spotify(
+            db,
+            spotify_track,
+            submitted_by=user_id,
+            auto_approve=auto_approve,
+        )
         created += 1
 
     return {

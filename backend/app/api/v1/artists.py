@@ -22,7 +22,7 @@ router = APIRouter(prefix="/artists", tags=["artists"])
 
 
 def _artist_with_tracks(db: Session, artist: Artist) -> dict:
-    """Загальний серіалізатор: артист + його треки + кількість альбомів."""
+    """Загальний серіалізатор: артист + його approved-треки + кількість альбомів."""
     stmt = (
         select(
             Track,
@@ -30,7 +30,7 @@ def _artist_with_tracks(db: Session, artist: Artist) -> dict:
             func.count(Review.id).label("reviews_count"),
         )
         .outerjoin(Review, Track.id == Review.track_id)
-        .where(Track.artist_id == artist.id)
+        .where(Track.artist_id == artist.id, Track.status == "approved")
         .group_by(Track.id)
         .order_by(Track.created_at.desc())
     )

@@ -8,6 +8,11 @@ from app.core.security import decode_access_token
 from app.models import User
 
 
+# Окрема схема для опційного auth — auto_error=False не кидає 403,
+# якщо заголовку немає, а просто віддає None.
+optional_security_scheme = HTTPBearer(auto_error=False)
+
+
 # HTTPBearer — вбудований механізм FastAPI для витягування токена
 # з заголовку Authorization: Bearer <token>.
 # auto_error=True означає: якщо заголовку немає — одразу 403.
@@ -78,3 +83,28 @@ def require_role(*allowed_roles: str):
 
 require_admin = require_role("admin")
 require_artist = require_role("artist", "admin")
+
+
+async def get_current_user_optional(
+    credentials: HTTPAuthorizationCredentials | None = Depends(optional_security_scheme),
+    db: Session = Depends(get_db),
+) -> User | None:
+    """
+    Те саме, що get_current_user, але якщо заголовку Authorization немає —
+    повертає None замість 403. Корисно для публічних ендпоінтів, які
+    хочуть пер-юзер логіку (типу: показувати власні pending-треки).
+    Якщо токен ПЕРЕДАНО, але невалідний — кидаємо 401, як зазвичай.
+    """
+    if credentials is None:
+        return None
+
+    user_id = decode_access_token(credentials.credentials)
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+    return user

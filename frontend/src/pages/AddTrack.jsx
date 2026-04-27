@@ -3,14 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiPlus, FiMusic } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import { tracksAPI } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import usePageTitle from '../utils/usePageTitle';
 
 export default function AddTrack() {
+  const { user } = useAuth();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [adding, setAdding] = useState(null);
   const navigate = useNavigate();
+  const isAdmin = user && user.role === 'admin';
 
   usePageTitle('Додати трек');
 
@@ -42,7 +45,11 @@ export default function AddTrack() {
     setAdding(track.spotify_id);
     try {
       const res = await tracksAPI.addFromSpotify(track);
-      toast.success(`${track.title} додано!`);
+      if (isAdmin) {
+        toast.success(`${track.title} опубліковано!`);
+      } else {
+        toast.success('Заявку надіслано — модератор перегляне найближчим часом', { duration: 5000 });
+      }
       navigate(`/tracks/${res.data.id}`);
     } catch {
       toast.error('Помилка при додаванні');
@@ -60,7 +67,11 @@ export default function AddTrack() {
         album_title: albumTitle || null,
         cover_url: coverUrl || null,
       });
-      toast.success('Трек додано!');
+      if (isAdmin) {
+        toast.success('Трек опубліковано!');
+      } else {
+        toast.success('Заявку надіслано — модератор перегляне найближчим часом', { duration: 5000 });
+      }
       navigate(`/tracks/${res.data.id}`);
     } catch {
       toast.error('Помилка');

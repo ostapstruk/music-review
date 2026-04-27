@@ -43,7 +43,7 @@ def get_trending_tracks(
         .subquery()
     )
     
-    # Основний запит: трек + артист + статистика
+    # Основний запит: трек + артист + статистика. Лише approved (модерацію пройшли).
     stmt = (
         select(
             Track,
@@ -55,6 +55,7 @@ def get_trending_tracks(
         )
         .join(Artist, Track.artist_id == Artist.id)
         .join(stats, Track.id == stats.c.track_id)
+        .where(Track.status == "approved")
     )
     
     rows = db.execute(stmt).all()

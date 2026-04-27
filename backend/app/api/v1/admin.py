@@ -15,6 +15,13 @@ from app.services.artist_service import (
     list_claims,
     reject_claim,
 )
+from app.services.track_service import (
+    TrackAlreadyReviewedError,
+    TrackNotFoundError,
+    approve_track,
+    list_track_submissions,
+    reject_track,
+)
 
 
 VALID_ROLES = ("listener", "artist", "admin")
@@ -112,3 +119,51 @@ async def admin_change_user_role(
         "created_at": user.created_at,
         "is_verified_artist": artist_id is not None,
     }
+
+
+# =============================================================================
+# Track moderation
+# =============================================================================
+
+@router.get("/track-submissions")
+async def admin_list_track_submissions(
+    status_filter: str | None = Query(
+        None, alias="status", pattern="^(pending|approved|rejected)$",
+    ),
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Список заявок на додавання треку. Опційно фільтр за статусом."""
+    return list_track_submissions(db, status_filter=status_filter)
+
+
+@router.post("/track-submissions/{track_id}/approve")
+async def admin_approve_track(
+    track_id: int,
+    current_admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Адмін підтверджує заявку на трек — він стає публічним."""
+    try:
+        track = approve_track(db, track_id, current_admin.id)
+    except TrackNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except TrackAlreadyReviewedError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+    return {"id": track.id, "status": track.status}
+
+
+@router.post("/track-submissions/{track_id}/reject")
+async def admin_reject_track(
+    track_id: int,
+    current_admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Адмін відхиляє заявку. Трек лишається у БД зі статусом 'rejected'."""
+    try:
+        track = reject_track(db, track_id, current_admin.id)
+    except TrackNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except TrackAlreadyReviewedError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+    return {"id": track.id, "status": track.status}

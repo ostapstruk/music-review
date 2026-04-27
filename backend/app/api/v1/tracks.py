@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.dependencies import get_current_user, require_admin
+from app.core.dependencies import get_current_user, get_current_user_optional, require_admin
 from app.models import User
 from app.schemas import SpotifySearchResult, TrackCreate, TrackDetail, TrackRead, TrackTrending
 from app.services.track_service import (
@@ -61,8 +61,17 @@ async def add_from_spotify(
     """
     Додає трек з результатів Spotify-пошуку.
     Автоматично підтягує audio features для радарної діаграми.
+
+    Не-адмін створює заявку на модерацію (status='pending').
+    Адмін додає одразу опубліковано (status='approved').
     """
-    track = await create_track_from_spotify(db, data.model_dump())
+    is_admin = current_user.role == "admin"
+    track = await create_track_from_spotify(
+        db,
+        data.model_dump(),
+        submitted_by=current_user.id,
+        auto_approve=is_admin,
+    )
     return track
 
 
@@ -77,9 +86,20 @@ async def list_tracks(
 
 
 @router.get("/{track_id}", response_model=TrackDetail)
-async def get_track(track_id: int, db: Session = Depends(get_db)):
-    """Деталі треку."""
-    track = get_track_detail(db, track_id)
+async def get_track(
+    track_id: int,
+    db: Session = Depends(get_db),
+    user: User | None = Depends(get_current_user_optional),
+):
+    """
+    Деталі треку. Pending-треки видно лише адміну й автору заявки —
+    усі інші отримують 404.
+    """
+    requester_id = user.id if user else None
+    is_admin = bool(user and user.role == "admin")
+    track = get_track_detail(
+        db, track_id, requester_id=requester_id, is_admin=is_admin,
+    )
     if track is None:
         raise HTTPException(status_code=404, detail=f"Track {track_id} not found")
     return track
@@ -91,8 +111,17 @@ async def create_track(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Додає трек вручну."""
-    track = create_track_manually(db, data)
+    """
+    Додає трек вручну. Не-адмін створює заявку (status='pending'),
+    адмін — одразу опубліковано.
+    """
+    is_admin = current_user.role == "admin"
+    track = create_track_manually(
+        db,
+        data,
+        submitted_by=current_user.id,
+        auto_approve=is_admin,
+    )
     return track
 
 

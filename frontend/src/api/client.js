@@ -143,6 +143,11 @@ export const adminAPI = {
   rejectClaim: (claimId) => api.post(`/admin/claims/${claimId}/reject`),
   changeUserRole: (userId, role) =>
     api.patch(`/admin/users/${userId}/role`, { role }),
+
+  listTrackSubmissions: (statusFilter) =>
+    api.get('/admin/track-submissions', { params: statusFilter ? { status: statusFilter } : {} }),
+  approveTrack: (trackId) => api.post(`/admin/track-submissions/${trackId}/approve`),
+  rejectTrack: (trackId) => api.post(`/admin/track-submissions/${trackId}/reject`),
 };
 
 export default api;

@@ -2216,8 +2216,75 @@ body.light-theme .auth-card {
 }
 
 /* ============================================================================
-   Admin claims page
+   Pending / rejected track banners
    ============================================================================ */
+.pending-banner, .rejected-banner {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    border-left: 4px solid;
+}
+
+.pending-banner {
+    border-left-color: #fdcb6e;
+    background: rgba(253, 203, 110, 0.08);
+}
+
+.pending-banner > svg {
+    color: #fdcb6e;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.rejected-banner {
+    border-left-color: #d63031;
+    background: rgba(214, 48, 49, 0.08);
+}
+
+.rejected-banner > svg {
+    color: #d63031;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* ============================================================================
+   Admin panel
+   ============================================================================ */
+.admin-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+
+.admin-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: var(--transition);
+    margin-bottom: -1px;
+}
+
+.admin-tab:hover {
+    color: var(--text-primary);
+}
+
+.admin-tab-active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
 .claim-item {
     display: flex;
     justify-content: space-between;

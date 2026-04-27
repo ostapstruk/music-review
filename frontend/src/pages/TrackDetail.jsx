@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { FiDisc, FiClock, FiStar, FiArrowLeft, FiShare2, FiExternalLink, FiTrash2 } from 'react-icons/fi';
+import { FiDisc, FiClock, FiStar, FiArrowLeft, FiShare2, FiExternalLink, FiTrash2, FiAlertCircle } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import { tracksAPI, reviewsAPI } from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -118,6 +118,30 @@ export default function TrackDetail() {
           )}
         </div>
       </div>
+
+      {track.status === 'pending' && (
+        <div className="card pending-banner">
+          <FiAlertCircle size={20} />
+          <div>
+            <strong>На модерації</strong>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+              Цей трек ще не опубліковано — він видимий лише вам та адміністраторам.
+              Чекайте підтвердження від адміна.
+            </p>
+          </div>
+        </div>
+      )}
+      {track.status === 'rejected' && (
+        <div className="card rejected-banner">
+          <FiAlertCircle size={20} />
+          <div>
+            <strong>Заявку відхилено</strong>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+              Адміністратор не пропустив цей трек у каталог.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="track-hero">
         <div className="track-hero-cover">
