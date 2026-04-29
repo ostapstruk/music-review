@@ -14,12 +14,28 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.post("/", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 async def register_user(data: UserCreate, db: Session = Depends(get_db)):
-    """Реєстрація."""
+    """
+    Реєстрація. Створює юзера у статусі is_verified=false і одразу
+    надсилає 6-значний код на email. Юзер активується через POST /auth/verify.
+    Першого юзера у системі ставимо адміном і верифікованим автоматично.
+    """
+    from app.services.verification_service import issue_verification_code
+
     try:
         user = create_user(db, data)
     except UserAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
-    return user
+
+    # Перший юзер уже верифікований (auto-admin) → пропускаємо лист.
+    if not user.is_verified:
+        try:
+            await issue_verification_code(db, user, enforce_cooldown=False)
+        except Exception:
+            # Помилка SMTP не повинна валити саму реєстрацію — юзер може
+            # запросити повторне надсилання через /auth/resend-code.
+            pass
+
+    return _user_to_dict(user, _claimed_artist_id(db, user.id))
 
 
 def _user_to_dict(user: User, claimed_artist_id: int | None) -> dict:

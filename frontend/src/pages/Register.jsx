@@ -18,9 +18,16 @@ export default function Register() {
     e.preventDefault();
     setLoading(true);
     try {
-      await register(username, email, password);
-      toast.success('Акаунт створено!');
-      navigate('/');
+      const user = await register(username, email, password);
+      // Перший юзер у системі стає адміном і одразу верифікований —
+      // тоді треба ще один крок: логін.
+      if (user && user.is_verified) {
+        toast.success('Акаунт створено! Увійдіть для початку роботи.');
+        navigate('/login');
+      } else {
+        toast.success('Код підтвердження надіслано на email', { duration: 5000 });
+        navigate(`/verify-email?email=${encodeURIComponent(email)}`);
+      }
     } catch (err) {
       const detail = err.response?.data?.detail;
       toast.error(typeof detail === 'string' ? detail : 'Помилка реєстрації');

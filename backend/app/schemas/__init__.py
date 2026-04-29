@@ -5,7 +5,7 @@ from app.schemas.artist_claim import (
     ArtistClaimRead,
     ArtistSyncResult,
 )
-from app.schemas.auth import LoginRequest, TokenResponse
+from app.schemas.auth import LoginRequest, ResendRequest, TokenResponse, VerifyRequest
 from app.schemas.badge import BadgeRead
 from app.schemas.genre import GenreRead
 from app.schemas.review import ReviewCreate, ReviewRead
@@ -23,10 +23,12 @@ __all__ = [
     "GenreRead",
     "LoginRequest",
     "PublicUserRead",
+    "ResendRequest",
     "ReviewCreate",
     "ReviewRead",
     "SpotifySearchResult",
     "TokenResponse",
+    "VerifyRequest",
     "TrackCreate",
     "TrackDetail",
     "TrackRead",

@@ -47,6 +47,7 @@ def create_user(db: Session, data: UserCreate) -> User:
     password_hash = hash_password(data.password)
 
     # 3. Перший юзер у системі автоматично стає адміном — щоб не пушити SQL руками.
+    #    Його ж одразу верифікуємо (нема кому надсилати/підтверджувати).
     is_first_user = db.execute(select(func.count(User.id))).scalar_one() == 0
     role = "admin" if is_first_user else "listener"
 
@@ -56,6 +57,7 @@ def create_user(db: Session, data: UserCreate) -> User:
         email=data.email,
         password_hash=password_hash,
         role=role,
+        is_verified=is_first_user,
     )
 
     # 5. Додаємо в сесію і комітимо.

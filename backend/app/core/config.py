@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     
     # Gemini AI
     GEMINI_API_KEY: str = ""
+
+    # Email (Resend) — для верифікації акаунтів.
+    # Якщо RESEND_API_KEY порожній — лист не відсилається, код друкується у логах.
+    RESEND_API_KEY: str = ""
+    EMAIL_FROM: str = "MusicReview <onboarding@resend.dev>"
     
     model_config = SettingsConfigDict(
         env_file=".env",

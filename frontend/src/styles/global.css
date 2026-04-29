@@ -2216,6 +2216,36 @@ body.light-theme .auth-card {
 }
 
 /* ============================================================================
+   Email verification — code input
+   ============================================================================ */
+.verify-code-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin: 8px 0;
+}
+
+.verify-code-input {
+    width: 44px;
+    height: 54px;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    transition: var(--transition);
+    font-family: 'Courier New', monospace;
+}
+
+.verify-code-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.18);
+}
+
+/* ============================================================================
    Pending / rejected track banners
    ============================================================================ */
 .pending-banner, .rejected-banner {

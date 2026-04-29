@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, String, Text, func
+from sqlalchemy import BigInteger, Boolean, DateTime, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -45,6 +45,11 @@ class User(Base):
     bio: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
+    )
+    is_verified: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

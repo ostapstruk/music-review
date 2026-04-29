@@ -9,6 +9,7 @@ import TrackDetail from './pages/TrackDetail';
 import AddTrack from './pages/AddTrack';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import VerifyEmail from './pages/VerifyEmail';
 import Profile from './pages/Profile';
 import ArtistDetail from './pages/ArtistDetail';
 import ArtistDashboard from './pages/ArtistDashboard';
@@ -32,6 +33,7 @@ export default function App() {
             <Route path="/tracks/:id" element={<TrackDetail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/artists/:id" element={<ArtistDetail />} />
             <Route path="/artist" element={<ArtistDashboard />} />

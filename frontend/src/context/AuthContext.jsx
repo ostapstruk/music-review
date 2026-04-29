@@ -33,8 +33,20 @@ export function AuthProvider({ children }) {
   };
 
   const register = async (username, email, password) => {
-    await authAPI.register(username, email, password);
-    return login(email, password);
+    // Не логінимо автоматично — юзер ще не верифікований.
+    // Бекенд відправляє код на email; фронт перекине на /verify-email.
+    const res = await authAPI.register(username, email, password);
+    return res.data;
+  };
+
+  const verifyEmail = async (email, code) => {
+    const res = await authAPI.verifyEmail(email, code);
+    const token = res.data.access_token;
+    localStorage.setItem('access_token', token);
+
+    const meRes = await authAPI.getMe();
+    setUser(meRes.data);
+    return meRes.data;
   };
 
   const logout = () => {
@@ -50,7 +62,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, verifyEmail, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

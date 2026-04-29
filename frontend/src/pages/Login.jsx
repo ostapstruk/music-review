@@ -20,8 +20,15 @@ export default function Login() {
       await login(email, password);
       toast.success('Ви увійшли!');
       navigate('/');
-    } catch {
-      toast.error('Невірний email або пароль');
+    } catch (err) {
+      const detail = err.response?.data?.detail;
+      // Бек повертає {code: 'EMAIL_NOT_VERIFIED', email} у detail при 403.
+      if (err.response?.status === 403 && detail?.code === 'EMAIL_NOT_VERIFIED') {
+        toast('Email ще не підтверджено — введіть код', { icon: '✉️' });
+        navigate(`/verify-email?email=${encodeURIComponent(detail.email || email)}`);
+      } else {
+        toast.error('Невірний email або пароль');
+      }
     } finally {
       setLoading(false);
     }

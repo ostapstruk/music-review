@@ -28,10 +28,16 @@ export const authAPI = {
   register: (username, email, password) =>
     api.post('/users/', { username, email, password }),
 
+  verifyEmail: (email, code) =>
+    api.post('/auth/verify', { email, code }),
+
+  resendCode: (email) =>
+    api.post('/auth/resend-code', { email }),
+
   getMe: () => api.get('/users/me'),
 
   updateProfile: (data) => api.put('/users/me', data),
-  
+
   getPublicProfile: (userId) => api.get('/users/' + userId + '/public'),
 };
 
