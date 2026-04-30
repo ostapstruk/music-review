@@ -1,15 +1,12 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { authAPI } from '../api/client';
 
-// 1. Створюємо контекст
 const AuthContext = createContext(null);
 
-// 2. Провайдер — обгортає весь додаток
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // При завантаженні додатку — перевіряємо, чи є збережений токен
   useEffect(() => {
     const token = localStorage.getItem('access_token');
     if (token) {
@@ -17,7 +14,6 @@ export function AuthProvider({ children }) {
         .getMe()
         .then((res) => setUser(res.data))
         .catch(() => {
-          // Токен невалідний або прострочений — видаляємо
           localStorage.removeItem('access_token');
         })
         .finally(() => setLoading(false));
@@ -31,7 +27,6 @@ export function AuthProvider({ children }) {
     const token = res.data.access_token;
     localStorage.setItem('access_token', token);
 
-    // Отримуємо дані юзера
     const meRes = await authAPI.getMe();
     setUser(meRes.data);
     return meRes.data;
@@ -39,7 +34,6 @@ export function AuthProvider({ children }) {
 
   const register = async (username, email, password) => {
     await authAPI.register(username, email, password);
-    // Після реєстрації — одразу логінимось
     return login(email, password);
   };
 
@@ -48,14 +42,20 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    try {
+      const res = await authAPI.getMe();
+      setUser(res.data);
+    } catch {}
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-// 3. Хук для зручного використання
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {

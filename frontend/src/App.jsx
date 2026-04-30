@@ -12,12 +12,14 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import ArtistDetail from './pages/ArtistDetail';
 import ScrollToTop from './components/ScrollToTop';
+import { SpeechProvider } from './context/SpeechContext';
 
 export default function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
       <AuthProvider>
+        <SpeechProvider>
         <Navbar />
         <main className="container">
           <Routes>
@@ -42,6 +44,7 @@ export default function App() {
             },
           }}
         />
+      </SpeechProvider>
       </AuthProvider>
     </BrowserRouter>
   );

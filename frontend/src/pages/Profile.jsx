@@ -7,11 +7,12 @@ import { reviewsAPI, authAPI } from '../api/client';
 import usePageTitle from '../utils/usePageTitle';
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [bio, setBio] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [saving, setSaving] = useState(false);
 
   usePageTitle(user ? user.username : 'Профіль');
@@ -27,15 +28,19 @@ export default function Profile() {
   }, [user]);
 
   useEffect(() => {
-    if (user) setBio(user.bio || '');
+    if (user) {
+      setBio(user.bio || '');
+      setAvatarUrl(user.avatar_url || '');
+    }
   }, [user]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await authAPI.updateProfile({ bio });
+      await authAPI.updateProfile({ bio, avatar_url: avatarUrl || null });
       toast.success('Профіль оновлено!');
       setEditing(false);
+      await refreshUser();
     } catch {
       toast.error('Помилка збереження');
     } finally {
@@ -52,7 +57,6 @@ export default function Profile() {
     );
   }
 
-  // Статистика
   const avgRating = reviews.length > 0
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : '—';
@@ -69,10 +73,13 @@ export default function Profile() {
 
   return (
     <div className="page">
-      {/* Шапка профілю */}
       <div className="profile-header card">
         <div className="profile-avatar">
-          <FiUser size={48} />
+          {user.avatar_url ? (
+            <img src={user.avatar_url} alt={user.username} className="profile-avatar-img" />
+          ) : (
+            <FiUser size={48} />
+          )}
         </div>
         <div className="profile-info">
           <h1 className="profile-name">{user.username}</h1>
@@ -89,6 +96,13 @@ export default function Profile() {
             </>
           ) : (
             <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <input
+                type="url"
+                className="input"
+                placeholder="URL аватарки (наприклад, https://...)"
+                value={avatarUrl}
+                onChange={(e) => setAvatarUrl(e.target.value)}
+              />
               <textarea className="input" placeholder="Розкажіть про себе..."
                 value={bio} onChange={(e) => setBio(e.target.value)} rows={3} />
               <div style={{ display: 'flex', gap: 8 }}>
@@ -104,7 +118,6 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Статистика */}
       <div className="stats-grid">
         <div className="stat-card card">
           <div className="stat-icon"><FiMessageSquare size={24} /></div>
@@ -118,12 +131,11 @@ export default function Profile() {
         </div>
         <div className="stat-card card">
           <div className="stat-icon"><FiTrendingUp size={24} /></div>
-          <div className="stat-value">{highestRating > 0 ? `${lowestRating}–${highestRating}` : '—'}</div>
+          <div className="stat-value">{highestRating > 0 ? lowestRating + '–' + highestRating : '—'}</div>
           <div className="stat-label">Діапазон оцінок</div>
         </div>
       </div>
 
-      {/* Рецензії */}
       <h2 className="section-title">Мої рецензії</h2>
       {reviews.length === 0 ? (
         <div className="empty-state card" style={{ padding: 40 }}>

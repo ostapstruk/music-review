@@ -96,6 +96,7 @@ export default function ReviewCard({ review, onUpdate, initialVote = null }) {
           <button
             className={`vote-btn ${userVote === 'like' ? 'vote-liked' : ''}`}
             onClick={handleLike}
+            aria-label={"Лайк: " + likesCount}
           >
             <FiThumbsUp size={14} />
             <span>{likesCount}</span>
@@ -103,6 +104,7 @@ export default function ReviewCard({ review, onUpdate, initialVote = null }) {
           <button
             className={`vote-btn ${userVote === 'dislike' ? 'vote-disliked' : ''}`}
             onClick={handleDislike}
+            aria-label={"Дизлайк: " + dislikesCount}
           >
             <FiThumbsDown size={14} />
             <span>{dislikesCount}</span>
