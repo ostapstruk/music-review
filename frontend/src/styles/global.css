@@ -707,6 +707,16 @@ textarea.input {
     align-items: center;
     gap: 8px;
     color: var(--text-secondary);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.review-user:hover {
+    color: var(--accent);
+}
+
+.review-user:hover .review-username {
+    color: var(--accent);
 }
 
 .review-username {
@@ -1940,4 +1950,9 @@ body.light-theme .auth-card {
     background: var(--accent-gradient);
     border-color: var(--accent);
     color: white;
+}
+
+.activity-avatar-link {
+    display: flex;
+    flex-shrink: 0;
 }

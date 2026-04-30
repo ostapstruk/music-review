@@ -13,6 +13,7 @@ import Profile from './pages/Profile';
 import ArtistDetail from './pages/ArtistDetail';
 import ScrollToTop from './components/ScrollToTop';
 import { SpeechProvider } from './context/SpeechContext';
+import PublicProfile from './pages/PublicProfile';
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/artists/:id" element={<ArtistDetail />} />
+            <Route path="/users/:id" element={<PublicProfile />} />
           </Routes>
         </main>
         <Footer />
