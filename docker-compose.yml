@@ -3,17 +3,16 @@ services:
     image: postgres:16-alpine
     container_name: musicreview_postgres
     environment:
-      POSTGRES_USER: musicreview
-      POSTGRES_PASSWORD: supersecret123
-      POSTGRES_DB: musicreview_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/migrations:/docker-entrypoint-initdb.d/01-migrations
-      - ./database/seeds:/docker-entrypoint-initdb.d/02-seeds
+      - ./database/init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U musicreview"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -24,7 +23,7 @@ services:
       dockerfile: Dockerfile
     container_name: musicreview_backend
     environment:
-      DATABASE_URL: postgresql+psycopg://musicreview:supersecret123@postgres:5432/musicreview_db
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       SECRET_KEY: ${SECRET_KEY}
       ACCESS_TOKEN_EXPIRE_MINUTES: 60
       JWT_ALGORITHM: HS256

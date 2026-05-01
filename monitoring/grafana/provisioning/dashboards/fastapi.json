@@ -8,7 +8,7 @@
   "liveNow": false,
   "panels": [
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "PBFA97CFB590B2093"},
       "fieldConfig": {
         "defaults": {
           "color": {"mode": "palette-classic"},
@@ -21,7 +21,7 @@
       "options": {"legend": {"displayMode": "list", "placement": "bottom"}},
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total[1m])) by (handler)",
+          "expr": "sum(rate(http_request_duration_seconds_count[1m])) by (handler)",
           "legendFormat": "{{handler}}",
           "refId": "A"
         }
@@ -30,7 +30,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "PBFA97CFB590B2093"},
       "fieldConfig": {
         "defaults": {
           "color": {"mode": "palette-classic"},
@@ -52,15 +52,14 @@
       "type": "timeseries"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "PBFA97CFB590B2093"},
       "fieldConfig": {
         "defaults": {
           "color": {"mode": "thresholds"},
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"color": "green", "value": null},
-              {"color": "red", "value": 80}
+              {"color": "green", "value": null}
             ]
           },
           "unit": "short"
@@ -71,7 +70,7 @@
       "options": {"colorMode": "value", "graphMode": "area"},
       "targets": [
         {
-          "expr": "sum(http_requests_total)",
+          "expr": "sum(http_request_duration_seconds_count)",
           "refId": "A"
         }
       ],
@@ -79,7 +78,7 @@
       "type": "stat"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "PBFA97CFB590B2093"},
       "fieldConfig": {
         "defaults": {
           "color": {"mode": "thresholds"},
@@ -98,7 +97,7 @@
       "options": {"colorMode": "value", "graphMode": "area"},
       "targets": [
         {
-          "expr": "sum(http_requests_total{status=~\"4..|5..\"})",
+          "expr": "sum(http_request_duration_seconds_count{status=~\"4..|5..\"}) or vector(0)",
           "refId": "A"
         }
       ],
@@ -116,6 +115,6 @@
   "timezone": "",
   "title": "MusicReview API Monitoring",
   "uid": "musicreview-fastapi",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
