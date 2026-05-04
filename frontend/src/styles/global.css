@@ -1540,9 +1540,35 @@ body.high-contrast .mini-play {
 @media (max-width: 768px) {
     .navbar-inner {
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 8px;
     }
-    
+
+    .navbar-actions {
+        gap: 6px;
+        flex-wrap: nowrap;
+    }
+
+    /* На мобілі лишаємо лише іконки в navbar-діях, щоб усе вмістилось */
+    .navbar-actions .nav-label {
+        display: none;
+    }
+
+    /* Адмін / Кабінет / Додати трек — стають квадратними іконками */
+    .navbar-actions .nav-icon-link {
+        padding: 8px 10px;
+        gap: 0;
+    }
+
+    /* Username біля аватара ховаємо — лишається аватар + бейдж ролі */
+    .nav-user .nav-username {
+        display: none;
+    }
+
+    /* Лічильники лайків — теж ховаємо, надто дрібно для тапу */
+    .nav-user .likes-badge {
+        display: none;
+    }
+
     .navbar-links {
         order: 3;
         width: 100%;

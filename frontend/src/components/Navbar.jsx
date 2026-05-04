@@ -105,19 +105,21 @@ export default function Navbar() {
           {user ? (
             <>
               {(user.role === 'artist' || user.is_verified_artist) && (
-                <Link to="/artist" className="nav-link" title="Кабінет артиста">
-                  <FiCheck size={14} /> Кабінет
+                <Link to="/artist" className="nav-link nav-icon-link" title="Кабінет артиста" aria-label="Кабінет артиста">
+                  <FiCheck size={14} />
+                  <span className="nav-label">Кабінет</span>
                 </Link>
               )}
               {user.role === 'admin' && (
-                <Link to="/admin/claims" className="nav-link" title="Заявки артистів">
-                  <FiShield size={14} /> Адмін
+                <Link to="/admin/claims" className="nav-link nav-icon-link" title="Заявки артистів" aria-label="Адмін-панель">
+                  <FiShield size={14} />
+                  <span className="nav-label">Адмін</span>
                 </Link>
               )}
               <Speakable text="Додати новий трек">
-                <Link to="/tracks/new" className="btn btn-sm btn-primary">
+                <Link to="/tracks/new" className="btn btn-sm btn-primary nav-icon-link" aria-label="Додати трек">
                   <FiPlus size={16} />
-                  Додати трек
+                  <span className="nav-label">Додати трек</span>
                 </Link>
               </Speakable>
               <Link to="/profile" className="nav-link nav-user">
@@ -126,7 +128,7 @@ export default function Navbar() {
                 ) : (
                   <UserAvatar username={user.username} size={22} />
                 )}
-                {user.username}
+                <span className="nav-username">{user.username}</span>
                 {user.role && user.role !== 'listener' && (
                   <RoleBadge role={user.role} showLabel={false} />
                 )}
@@ -147,9 +149,9 @@ export default function Navbar() {
             </>
           ) : (
             <Speakable text="Увійти в акаунт">
-              <Link to="/login" className="btn btn-sm btn-primary">
+              <Link to="/login" className="btn btn-sm btn-primary nav-icon-link" aria-label="Увійти">
                 <FiLogIn size={16} />
-                Увійти
+                <span className="nav-label">Увійти</span>
               </Link>
             </Speakable>
           )}
