@@ -47,6 +47,14 @@
 }
 
 /* ---------- Base ---------- */
+html, body {
+    /* Запобігає горизонтальному скролу на мобілі: якщо щось всередині
+       випадково ширше за viewport — браузер обрізає, а не дає скролити вбік.
+       'clip' краще за 'hidden': не ламає sticky-позиціонування. */
+    overflow-x: clip;
+    max-width: 100%;
+}
+
 html {
     font-size: 16px;
     scroll-behavior: smooth;
@@ -59,6 +67,11 @@ body {
     line-height: 1.6;
     min-height: 100vh;
     transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#root {
+    overflow-x: clip;
+    max-width: 100%;
 }
 a {
     color: var(--accent);
@@ -1656,20 +1669,30 @@ body.high-contrast .mini-play {
 }
 
 @media (max-width: 480px) {
+    .container {
+        padding: 0 12px;
+    }
+
     .page-title {
         font-size: 1.4rem;
     }
-    
+
     .track-hero-title {
         font-size: 1.4rem;
     }
-    
+
     .star-rating {
         flex-wrap: wrap;
     }
-    
+
     .grid-3 {
         grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    /* Картки треків не повинні мати власних мінімумів ширини, щоб 1fr/1fr працювало чітко */
+    .track-card {
+        min-width: 0;
     }
 }
 
