@@ -1554,11 +1554,18 @@ body.high-contrast .mini-play {
     .navbar-inner {
         flex-wrap: wrap;
         gap: 8px;
+        justify-content: center;
+    }
+
+    .navbar-logo {
+        flex: 1 1 100%;
+        justify-content: center;
     }
 
     .navbar-actions {
         gap: 6px;
         flex-wrap: nowrap;
+        justify-content: center;
     }
 
     /* На мобілі лишаємо лише іконки в navbar-діях, щоб усе вмістилось */
@@ -2262,6 +2269,112 @@ body.light-theme .auth-card {
         width: 120px;
         height: 120px;
     }
+}
+
+/* ============================================================================
+   Replies (плоскі коментарі під рецензією)
+   ============================================================================ */
+.replies-thread {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.replies-loading,
+.replies-empty {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 8px;
+}
+
+.reply-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 8px 10px;
+    background: var(--bg-card-hover, rgba(255, 255, 255, 0.025));
+    border-radius: var(--radius-md);
+    position: relative;
+}
+
+.reply-avatar {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.reply-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.reply-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 2px;
+    font-size: 0.82rem;
+}
+
+.reply-username {
+    font-weight: 600;
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.reply-username:hover {
+    color: var(--accent);
+}
+
+.reply-date {
+    color: var(--text-muted);
+    margin-left: auto;
+    font-size: 0.75rem;
+}
+
+.reply-text {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.reply-delete {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    padding: 2px 6px;
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.reply-item:hover .reply-delete,
+.reply-item:focus-within .reply-delete {
+    opacity: 1;
+}
+
+.reply-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.reply-input {
+    flex: 1;
+    min-width: 0;
+}
+
+.reply-empty-cta {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    padding: 6px;
 }
 
 /* ============================================================================

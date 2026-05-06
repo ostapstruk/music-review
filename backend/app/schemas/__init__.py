@@ -8,7 +8,7 @@ from app.schemas.artist_claim import (
 from app.schemas.auth import LoginRequest, ResendRequest, TokenResponse, VerifyRequest
 from app.schemas.badge import BadgeRead
 from app.schemas.genre import GenreRead
-from app.schemas.review import ReviewCreate, ReviewRead
+from app.schemas.review import ReviewCreate, ReviewRead, ReviewReplyCreate, ReviewReplyRead
 from app.schemas.track import SpotifySearchResult, TrackCreate, TrackDetail, TrackRead, TrackTrending
 from app.schemas.user import PublicUserRead, UserCreate, UserRead, UserUpdate
 
@@ -26,6 +26,8 @@ __all__ = [
     "ResendRequest",
     "ReviewCreate",
     "ReviewRead",
+    "ReviewReplyCreate",
+    "ReviewReplyRead",
     "SpotifySearchResult",
     "TokenResponse",
     "VerifyRequest",

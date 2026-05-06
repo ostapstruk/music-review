@@ -86,6 +86,11 @@ export const reviewsAPI = {
   delete: (reviewId) => api.delete(`/reviews/${reviewId}`),
 
   getMyVotes: (trackId) => api.get(`/reviews/my-votes/${trackId}`),
+
+  getReplies: (reviewId) => api.get(`/reviews/${reviewId}/replies`),
+  createReply: (reviewId, text) =>
+    api.post(`/reviews/${reviewId}/replies`, { text }),
+  deleteReply: (replyId) => api.delete(`/reviews/replies/${replyId}`),
 };
 
 // ============================================================================

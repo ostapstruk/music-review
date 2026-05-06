@@ -1,6 +1,6 @@
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
-from app.models import Artist, Review, ReviewLike, Track, User
+from app.models import Artist, Review, ReviewLike, ReviewReply, Track, User
 
 
 def _get_verified_user_ids(db: Session, user_ids: set[int]) -> set[int]:
@@ -327,8 +327,114 @@ def get_user_votes(db: Session, user_id: int, track_id: int) -> dict:
         )
     )
     rows = db.execute(stmt).all()
-    
+
     return {
         str(review_id): "like" if is_like else "dislike"
         for review_id, is_like in rows
     }
+
+
+# ----------------------------------------------------------------------------
+# Replies (плоскі коментарі під рецензією)
+# ----------------------------------------------------------------------------
+
+class ReplyNotFoundError(Exception):
+    pass
+
+
+class ReviewNotFoundError(Exception):
+    pass
+
+
+def _reply_to_dict(
+    reply: ReviewReply,
+    username: str | None,
+    avatar_url: str | None,
+    role: str | None,
+    is_verified_artist: bool,
+) -> dict:
+    return {
+        "id": reply.id,
+        "review_id": reply.review_id,
+        "user_id": reply.user_id,
+        "text": reply.text,
+        "created_at": reply.created_at,
+        "updated_at": reply.updated_at,
+        "username": username,
+        "avatar_url": avatar_url,
+        "role": role,
+        "is_verified_artist": is_verified_artist,
+    }
+
+
+def get_replies_for_review(
+    db: Session, review_id: int, limit: int = 100, offset: int = 0,
+) -> list[dict]:
+    """Усі відповіді під рецензією, найстарші — перші (хронологічно)."""
+    stmt = (
+        select(ReviewReply, User.username, User.avatar_url, User.role)
+        .join(User, ReviewReply.user_id == User.id)
+        .where(ReviewReply.review_id == review_id)
+        .order_by(ReviewReply.created_at.asc())
+        .limit(limit)
+        .offset(offset)
+    )
+    rows = db.execute(stmt).all()
+    user_ids = {reply.user_id for reply, *_ in rows}
+    verified_ids = _get_verified_user_ids(db, user_ids)
+
+    return [
+        _reply_to_dict(
+            reply, username, avatar_url, role,
+            is_verified_artist=reply.user_id in verified_ids,
+        )
+        for reply, username, avatar_url, role in rows
+    ]
+
+
+def create_reply(
+    db: Session, user_id: int, review_id: int, text: str,
+) -> dict:
+    """Створює відповідь під рецензією."""
+    review = db.execute(
+        select(Review).where(Review.id == review_id)
+    ).scalar_one_or_none()
+    if review is None:
+        raise ReviewNotFoundError(f"Review {review_id} not found")
+
+    reply = ReviewReply(
+        review_id=review_id,
+        user_id=user_id,
+        text=text.strip(),
+    )
+    db.add(reply)
+    db.commit()
+    db.refresh(reply)
+
+    row = db.execute(
+        select(User.username, User.avatar_url, User.role).where(User.id == user_id)
+    ).one()
+    username, avatar_url, role = row
+    verified = bool(_get_verified_user_ids(db, {user_id}))
+    return _reply_to_dict(reply, username, avatar_url, role, verified)
+
+
+def delete_reply(
+    db: Session, reply_id: int, user_id: int, is_admin: bool = False,
+) -> bool:
+    """
+    Видаляє відповідь. Автор може видалити свою; адмін — будь-яку.
+    Повертає True якщо видалено, False якщо не знайдено.
+    """
+    reply = db.execute(
+        select(ReviewReply).where(ReviewReply.id == reply_id)
+    ).scalar_one_or_none()
+    if reply is None:
+        return False
+
+    if not is_admin and reply.user_id != user_id:
+        raise PermissionError("Cannot delete another user's reply")
+
+    db.delete(reply)
+    db.commit()
+    return True

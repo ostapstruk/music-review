@@ -8,11 +8,13 @@ from app.models.email_verification import EmailVerification
 from app.models.genre import Genre
 from app.models.review import Review
 from app.models.review_like import ReviewLike
+from app.models.review_reply import ReviewReply
 from app.models.track import Track
 from app.models.user import User
 
 
 __all__ = [
     "Base", "ActivityFeed", "Album", "Artist", "ArtistClaim", "Badge",
-    "EmailVerification", "Genre", "Review", "ReviewLike", "Track", "User",
+    "EmailVerification", "Genre", "Review", "ReviewLike", "ReviewReply",
+    "Track", "User",
 ]

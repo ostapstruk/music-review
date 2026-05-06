@@ -3,15 +3,20 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.models import User
-from app.schemas import ReviewCreate, ReviewRead
+from app.schemas import ReviewCreate, ReviewRead, ReviewReplyCreate, ReviewReplyRead
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.core.security import decode_access_token
 from app.services.review_service import (
     AlreadyReviewedError,
+    ReplyNotFoundError,
+    ReviewNotFoundError,
     TrackNotFoundError,
+    create_reply,
     create_review,
+    delete_reply,
     delete_review,
     get_rating_distribution,
+    get_replies_for_review,
     get_reviews_by_user,
     get_reviews_for_track,
     get_user_votes,
@@ -145,4 +150,57 @@ async def dislike_review(
     except TrackNotFoundError:
         raise HTTPException(status_code=404, detail="Review not found")
     except AlreadyReviewedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+
+# ----------------------------------------------------------------------------
+# Replies (плоскі коментарі)
+# ----------------------------------------------------------------------------
+
+@router.get("/{review_id}/replies", response_model=list[ReviewReplyRead])
+async def list_review_replies(
+    review_id: int,
+    limit: int = Query(100, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    """Усі відповіді під рецензією, у хронологічному порядку."""
+    return get_replies_for_review(db, review_id, limit=limit, offset=offset)
+
+
+@router.post(
+    "/{review_id}/replies",
+    response_model=ReviewReplyRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def post_review_reply(
+    review_id: int,
+    data: ReviewReplyCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Створити відповідь під рецензією."""
+    try:
+        return create_reply(db, current_user.id, review_id, data.text)
+    except ReviewNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.delete("/replies/{reply_id}", status_code=204)
+async def remove_reply(
+    reply_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Видалити свою відповідь. Адмін може видалити будь-яку."""
+    try:
+        deleted = delete_reply(
+            db,
+            reply_id,
+            current_user.id,
+            is_admin=(current_user.role == "admin"),
+        )
+        if not deleted:
+            raise HTTPException(status_code=404, detail="Reply not found")
+    except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
