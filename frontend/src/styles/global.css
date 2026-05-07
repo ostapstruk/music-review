@@ -2377,6 +2377,42 @@ body.light-theme .auth-card {
     padding: 6px;
 }
 
+/* @-mentions у тексті рецензії/відповіді */
+.mention {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+    padding: 0 2px;
+    border-radius: 3px;
+    transition: var(--transition);
+}
+
+.mention:hover {
+    background: var(--accent-light);
+    color: var(--accent-hover);
+}
+
+/* Кнопка "Відповісти" на кожній репліці — викликає mentionUser() */
+.reply-mention-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+    padding: 2px 6px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: var(--transition);
+}
+
+.reply-mention-btn:hover {
+    color: var(--accent);
+    background: var(--accent-light);
+}
+
 /* ============================================================================
    Email verification — code input
    ============================================================================ */

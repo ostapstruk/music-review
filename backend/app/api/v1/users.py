@@ -81,6 +81,20 @@ async def update_me(
     db.refresh(current_user)
     return _user_to_dict(current_user, _claimed_artist_id(db, current_user.id))
 
+@router.get("/by-username/{username}")
+async def get_user_by_username(username: str, db: Session = Depends(get_db)):
+    """
+    Мінімальний lookup за username — для @-mention-ів у коментарях.
+    Повертає лише id, щоб фронт зробив редірект на /users/{id}.
+    """
+    user = db.execute(
+        select(User).where(User.username == username)
+    ).scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"id": user.id, "username": user.username}
+
+
 @router.get("/{user_id}/public", response_model=PublicUserRead)
 async def get_user_public(user_id: int, db: Session = Depends(get_db)):
     """

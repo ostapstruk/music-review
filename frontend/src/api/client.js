@@ -39,6 +39,8 @@ export const authAPI = {
   updateProfile: (data) => api.put('/users/me', data),
 
   getPublicProfile: (userId) => api.get('/users/' + userId + '/public'),
+
+  getByUsername: (username) => api.get('/users/by-username/' + encodeURIComponent(username)),
 };
 
 // ============================================================================

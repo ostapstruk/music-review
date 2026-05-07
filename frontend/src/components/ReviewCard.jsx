@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
-import { FiThumbsUp, FiThumbsDown, FiVolume2, FiTrash2, FiMessageCircle, FiSend, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { useState, useEffect, useRef } from 'react';
+import { FiThumbsUp, FiThumbsDown, FiVolume2, FiTrash2, FiMessageCircle, FiSend, FiChevronDown, FiChevronUp, FiCornerUpLeft } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import { reviewsAPI } from '../api/client';
 import toast from 'react-hot-toast';
 import UserAvatar from './UserAvatar';
 import RoleBadge from './RoleBadge';
 import timeAgo from '../utils/timeAgo';
+import renderMentions from '../utils/renderMentions';
 import { Link } from 'react-router-dom';
 
 export default function ReviewCard({ review, onUpdate, initialVote = null }) {
@@ -28,6 +29,21 @@ export default function ReviewCard({ review, onUpdate, initialVote = null }) {
   const [loadingReplies, setLoadingReplies] = useState(false);
   const [replyText, setReplyText] = useState('');
   const [submittingReply, setSubmittingReply] = useState(false);
+  const replyInputRef = useRef(null);
+
+  const mentionUser = (username) => {
+    if (!username) return;
+    setRepliesOpen(true);
+    if (!repliesLoaded) loadReplies();
+    setReplyText((current) => {
+      const prefix = `@${username} `;
+      // Уникаємо подвійних згадок підряд
+      if (current.startsWith(prefix)) return current;
+      return prefix + (current ? current : '');
+    });
+    // Фокус на поле, щоб юзер одразу друкував
+    setTimeout(() => replyInputRef.current?.focus(), 0);
+  };
 
   const handleLike = async () => {
     if (!user) return toast.error('Увійдіть, щоб голосувати');
@@ -170,7 +186,7 @@ export default function ReviewCard({ review, onUpdate, initialVote = null }) {
         <span className={`rating-badge ${ratingClass}`}>{review.rating}/10</span>
       </div>
 
-      {review.text && <p className="review-text">{review.text}</p>}
+      {review.text && <p className="review-text">{renderMentions(review.text)}</p>}
 
       <div className="review-footer">
         <div className="review-actions">
@@ -267,7 +283,18 @@ export default function ReviewCard({ review, onUpdate, initialVote = null }) {
                       {timeAgo(reply.created_at)}
                     </span>
                   </div>
-                  <p className="reply-text">{reply.text}</p>
+                  <p className="reply-text">{renderMentions(reply.text)}</p>
+                  {user && reply.username && reply.user_id !== user.id && (
+                    <button
+                      type="button"
+                      className="reply-mention-btn"
+                      onClick={() => mentionUser(reply.username)}
+                      title={`Відповісти @${reply.username}`}
+                    >
+                      <FiCornerUpLeft size={12} />
+                      Відповісти
+                    </button>
+                  )}
                 </div>
                 {replyCanDelete && (
                   <button
@@ -285,9 +312,10 @@ export default function ReviewCard({ review, onUpdate, initialVote = null }) {
           {user ? (
             <form onSubmit={handleSubmitReply} className="reply-form">
               <input
+                ref={replyInputRef}
                 type="text"
                 className="input reply-input"
-                placeholder="Додати відповідь…"
+                placeholder="Додати відповідь… можна @username"
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 maxLength={2000}
