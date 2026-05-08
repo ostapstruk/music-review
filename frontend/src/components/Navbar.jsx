@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { statsAPI } from '../api/client';
+import { statsAPI, notificationsAPI } from '../api/client';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
 import { useSpeech } from '../context/SpeechContext';
-import { FiMusic, FiLogIn, FiLogOut, FiUser, FiPlus, FiSun, FiMoon, FiEye, FiHeart, FiThumbsDown, FiVolume2, FiShield, FiCheck } from 'react-icons/fi';
+import { FiMusic, FiLogIn, FiLogOut, FiUser, FiPlus, FiSun, FiMoon, FiEye, FiHeart, FiThumbsDown, FiVolume2, FiShield, FiCheck, FiBell } from 'react-icons/fi';
 import Speakable from './Speakable';
 import RoleBadge from './RoleBadge';
 
@@ -25,6 +25,7 @@ export default function Navbar() {
 
   const [likesCount, setLikesCount] = useState(0);
   const [dislikesCount, setDislikesCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     document.body.classList.remove('light-theme', 'high-contrast');
@@ -44,8 +45,29 @@ export default function Navbar() {
           setDislikesCount(res.data.dislikes_received);
         })
         .catch(() => {});
+    } else {
+      setUnreadCount(0);
     }
   }, [user]);
+
+  // Полінг непрочитаних сповіщень — кожні 60 секунд + при зміні маршруту
+  // (якщо юзер пішов з /notifications, лічильник обнуляється — підтянемо).
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+
+    const fetchCount = () =>
+      notificationsAPI.unreadCount()
+        .then((res) => { if (!cancelled) setUnreadCount(res.data.count); })
+        .catch(() => {});
+
+    fetchCount();
+    const intervalId = setInterval(fetchCount, 60_000);
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [user, location.pathname]);
 
   const cycleTheme = () => {
     const currentIndex = THEMES.findIndex(t => t.id === theme);
@@ -104,6 +126,19 @@ export default function Navbar() {
 
           {user ? (
             <>
+              <Link
+                to="/notifications"
+                className="theme-toggle notification-bell"
+                title="Повідомлення"
+                aria-label={"Повідомлення" + (unreadCount > 0 ? `: ${unreadCount} непрочитаних` : '')}
+              >
+                <FiBell size={16} />
+                {unreadCount > 0 && (
+                  <span className="notification-badge">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </Link>
               {(user.role === 'artist' || user.is_verified_artist) && (
                 <Link to="/artist" className="nav-link nav-icon-link" title="Кабінет артиста" aria-label="Кабінет артиста">
                   <FiCheck size={14} />

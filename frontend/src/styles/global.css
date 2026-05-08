@@ -2377,6 +2377,129 @@ body.light-theme .auth-card {
     padding: 6px;
 }
 
+/* ============================================================================
+   Notifications
+   ============================================================================ */
+.notification-bell {
+    position: relative;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: #d63031;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    box-shadow: 0 0 0 2px var(--bg-primary);
+}
+
+.notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.notification-item {
+    display: flex;
+    gap: 12px;
+    padding: 14px 16px;
+    text-decoration: none;
+    color: inherit;
+    align-items: flex-start;
+    transition: var(--transition);
+    position: relative;
+}
+
+.notification-item:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+}
+
+.notification-unread {
+    background: rgba(108, 92, 231, 0.06);
+    border-color: rgba(108, 92, 231, 0.25);
+}
+
+.notification-avatar {
+    flex-shrink: 0;
+}
+
+.notification-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-meta {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    font-size: 0.92rem;
+    margin-bottom: 4px;
+}
+
+.notification-icon {
+    color: var(--accent);
+    margin-right: 2px;
+}
+
+.notification-actor {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.notification-text {
+    color: var(--text-secondary);
+}
+
+.notification-track {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.notification-snippet {
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    margin: 4px 0 6px;
+    line-height: 1.4;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.notification-date {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.notification-dot {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+@media (max-width: 480px) {
+    .notification-item {
+        padding: 12px;
+    }
+    .notification-snippet {
+        -webkit-line-clamp: 2;
+    }
+}
+
 /* @-mentions у тексті рецензії/відповіді */
 .mention {
     color: var(--accent);

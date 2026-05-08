@@ -146,6 +146,17 @@ export const artistsAPI = {
 };
 
 // ============================================================================
+// Notifications
+// ============================================================================
+
+export const notificationsAPI = {
+  list: (limit = 50, offset = 0) =>
+    api.get('/notifications/', { params: { limit, offset } }),
+  unreadCount: () => api.get('/notifications/unread-count'),
+  markAllRead: () => api.post('/notifications/mark-all-read'),
+};
+
+// ============================================================================
 // Admin
 // ============================================================================
 

@@ -10,6 +10,7 @@ from app.api.v1 import (
     auth,
     badges,
     genres,
+    notifications,
     reviews,
     stats,
     tracks,
@@ -43,6 +44,7 @@ app.include_router(artists.router, prefix="/api/v1")
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(badges.router, prefix="/api/v1")
 app.include_router(genres.router, prefix="/api/v1")
+app.include_router(notifications.router, prefix="/api/v1")
 app.include_router(reviews.router, prefix="/api/v1")
 app.include_router(stats.router, prefix="/api/v1")
 app.include_router(tracks.router, prefix="/api/v1")

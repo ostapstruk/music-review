@@ -14,6 +14,7 @@ import Profile from './pages/Profile';
 import ArtistDetail from './pages/ArtistDetail';
 import ArtistDashboard from './pages/ArtistDashboard';
 import AdminClaims from './pages/AdminClaims';
+import NotificationsPage from './pages/Notifications';
 import ScrollToTop from './components/ScrollToTop';
 import { SpeechProvider } from './context/SpeechContext';
 import PublicProfile from './pages/PublicProfile';
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="/artists/:id" element={<ArtistDetail />} />
             <Route path="/artist" element={<ArtistDashboard />} />
             <Route path="/admin/claims" element={<AdminClaims />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/users/:id" element={<PublicProfile />} />
             <Route path="/u/:username" element={<UserRedirect />} />
           </Routes>

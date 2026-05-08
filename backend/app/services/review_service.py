@@ -83,6 +83,17 @@ def create_review(
     )
     db.add(activity)
     db.commit()
+
+    # 5. Сповіщення про @-mentions у тексті рецензії
+    from app.services.notification_service import create_mention_notifications
+    create_mention_notifications(
+        db,
+        actor_id=user_id,
+        text=text,
+        source_type="review",
+        track_id=track_id,
+        review_id=review.id,
+    )
     
     # 5. Повертаємо з username, роллю та статусом верифікації
     row = db.execute(
@@ -402,14 +413,26 @@ def create_reply(
     if review is None:
         raise ReviewNotFoundError(f"Review {review_id} not found")
 
+    cleaned_text = text.strip()
     reply = ReviewReply(
         review_id=review_id,
         user_id=user_id,
-        text=text.strip(),
+        text=cleaned_text,
     )
     db.add(reply)
     db.commit()
     db.refresh(reply)
+
+    # Сповіщення про @-mentions у тексті відповіді
+    from app.services.notification_service import create_mention_notifications
+    create_mention_notifications(
+        db,
+        actor_id=user_id,
+        text=cleaned_text,
+        source_type="reply",
+        track_id=review.track_id,
+        reply_id=reply.id,
+    )
 
     row = db.execute(
         select(User.username, User.avatar_url, User.role).where(User.id == user_id)

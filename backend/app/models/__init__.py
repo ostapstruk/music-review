@@ -6,6 +6,7 @@ from app.models.artist_claim import ArtistClaim
 from app.models.badge import Badge
 from app.models.email_verification import EmailVerification
 from app.models.genre import Genre
+from app.models.notification import Notification
 from app.models.review import Review
 from app.models.review_like import ReviewLike
 from app.models.review_reply import ReviewReply
@@ -15,6 +16,6 @@ from app.models.user import User
 
 __all__ = [
     "Base", "ActivityFeed", "Album", "Artist", "ArtistClaim", "Badge",
-    "EmailVerification", "Genre", "Review", "ReviewLike", "ReviewReply",
-    "Track", "User",
+    "EmailVerification", "Genre", "Notification", "Review", "ReviewLike",
+    "ReviewReply", "Track", "User",
 ]
