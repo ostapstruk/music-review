@@ -25,6 +25,7 @@ export default function ReviewCard({ review, onUpdate, initialVote = null }) {
   // Reply state
   const [repliesOpen, setRepliesOpen] = useState(false);
   const [replies, setReplies] = useState([]);
+  const [repliesCount, setRepliesCount] = useState(review.replies_count || 0);
   const [repliesLoaded, setRepliesLoaded] = useState(false);
   const [loadingReplies, setLoadingReplies] = useState(false);
   const [replyText, setReplyText] = useState('');
@@ -105,6 +106,7 @@ export default function ReviewCard({ review, onUpdate, initialVote = null }) {
     try {
       const res = await reviewsAPI.getReplies(review.id);
       setReplies(res.data);
+      setRepliesCount(res.data.length);
       setRepliesLoaded(true);
     } catch {
       toast.error('Не вдалося завантажити відповіді');
@@ -131,6 +133,7 @@ export default function ReviewCard({ review, onUpdate, initialVote = null }) {
     try {
       const res = await reviewsAPI.createReply(review.id, text);
       setReplies((prev) => [...prev, res.data]);
+      setRepliesCount((c) => c + 1);
       setReplyText('');
       setRepliesLoaded(true);
     } catch (err) {
@@ -145,6 +148,7 @@ export default function ReviewCard({ review, onUpdate, initialVote = null }) {
     try {
       await reviewsAPI.deleteReply(replyId);
       setReplies((prev) => prev.filter((r) => r.id !== replyId));
+      setRepliesCount((c) => Math.max(0, c - 1));
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Помилка');
     }
@@ -157,10 +161,8 @@ export default function ReviewCard({ review, onUpdate, initialVote = null }) {
   const ratingClass =
     review.rating >= 8 ? 'rating-high' : review.rating >= 5 ? 'rating-mid' : 'rating-low';
 
-  // Скільки відповідей показувати у кнопці. Якщо завантажено — точна кількість; якщо ні — взагалі без числа.
-  const replyCountLabel = repliesLoaded
-    ? `Відповіді (${replies.length})`
-    : 'Відповіді';
+  // Точна кількість одразу — приходить з бекенду в полі replies_count.
+  const replyCountLabel = `Відповіді (${repliesCount})`;
 
   return (
     <div className="review-card card">

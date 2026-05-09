@@ -130,7 +130,16 @@ def get_reviews_for_track(
         .group_by(ReviewLike.review_id)
         .subquery()
     )
-    
+
+    replies_sub = (
+        select(
+            ReviewReply.review_id,
+            func.count(ReviewReply.id).label("replies_count"),
+        )
+        .group_by(ReviewReply.review_id)
+        .subquery()
+    )
+
     stmt = (
         select(
             Review,
@@ -139,9 +148,11 @@ def get_reviews_for_track(
             User.role,
             func.coalesce(likes_sub.c.likes_count, 0).label("likes_count"),
             func.coalesce(likes_sub.c.dislikes_count, 0).label("dislikes_count"),
+            func.coalesce(replies_sub.c.replies_count, 0).label("replies_count"),
         )
         .join(User, Review.user_id == User.id)
         .outerjoin(likes_sub, Review.id == likes_sub.c.review_id)
+        .outerjoin(replies_sub, Review.id == replies_sub.c.review_id)
         .where(Review.track_id == track_id)
         .order_by(
             (func.coalesce(likes_sub.c.likes_count, 0)
@@ -161,8 +172,9 @@ def get_reviews_for_track(
             review, username, likes, dislikes, avatar_url,
             role=role,
             is_verified_artist=review.user_id in verified_ids,
+            replies_count=replies,
         )
-        for review, username, avatar_url, role, likes, dislikes in rows
+        for review, username, avatar_url, role, likes, dislikes, replies in rows
     ]
 
 def get_reviews_by_user(
@@ -172,6 +184,15 @@ def get_reviews_by_user(
     offset: int = 0,
 ) -> list[dict]:
     """Повертає рецензії конкретного користувача (для профілю)."""
+    replies_sub = (
+        select(
+            ReviewReply.review_id,
+            func.count(ReviewReply.id).label("replies_count"),
+        )
+        .group_by(ReviewReply.review_id)
+        .subquery()
+    )
+
     stmt = (
         select(
             Review,
@@ -179,9 +200,11 @@ def get_reviews_by_user(
             User.role,
             Track.title.label("track_title"),
             Track.cover_url.label("track_cover"),
+            func.coalesce(replies_sub.c.replies_count, 0).label("replies_count"),
         )
         .join(User, Review.user_id == User.id)
         .join(Track, Review.track_id == Track.id)
+        .outerjoin(replies_sub, Review.id == replies_sub.c.review_id)
         .where(Review.user_id == user_id)
         .order_by(Review.created_at.desc())
         .limit(limit)
@@ -194,11 +217,12 @@ def get_reviews_by_user(
         {
             **_review_to_dict(
                 review, username, role=role, is_verified_artist=verified,
+                replies_count=replies,
             ),
             "track_title": track_title,
             "track_cover": track_cover,
         }
-        for review, username, role, track_title, track_cover in rows
+        for review, username, role, track_title, track_cover, replies in rows
     ]
 
 def _review_to_dict(
@@ -209,6 +233,7 @@ def _review_to_dict(
     avatar_url: str | None = None,
     role: str | None = None,
     is_verified_artist: bool = False,
+    replies_count: int = 0,
 ) -> dict:
     """Допоміжна функція — перетворює Review на словник."""
     return {
@@ -225,6 +250,7 @@ def _review_to_dict(
         "is_verified_artist": is_verified_artist,
         "likes_count": likes_count,
         "dislikes_count": dislikes_count,
+        "replies_count": replies_count,
     }
 
 def toggle_review_like(

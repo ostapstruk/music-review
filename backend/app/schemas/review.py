@@ -56,6 +56,7 @@ class ReviewRead(BaseModel):
     is_verified_artist: bool = False
     likes_count: int = 0
     dislikes_count: int = 0
+    replies_count: int = 0
     track_title: str | None = None
     track_cover: str | None = None
     

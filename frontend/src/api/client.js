@@ -153,7 +153,10 @@ export const notificationsAPI = {
   list: (limit = 50, offset = 0) =>
     api.get('/notifications/', { params: { limit, offset } }),
   unreadCount: () => api.get('/notifications/unread-count'),
-  markAllRead: () => api.post('/notifications/mark-all-read'),
+  // Викликається при відкритті сторінки — клінає бейдж на дзвонику.
+  markAllSeen: () => api.post('/notifications/mark-all-seen'),
+  // Викликається при кліку на конкретний айтем — прибирає виділення.
+  markRead: (id) => api.post(`/notifications/${id}/mark-read`),
 };
 
 // ============================================================================

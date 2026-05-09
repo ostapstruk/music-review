@@ -110,6 +110,7 @@ def list_notifications(
             "reply_id": n.reply_id,
             "text_snippet": n.text_snippet,
             "is_read": n.is_read,
+            "is_seen": n.is_seen,
             "created_at": n.created_at,
             "actor_id": n.actor_id,
             "actor_username": actor_username,
@@ -121,23 +122,53 @@ def list_notifications(
 
 
 def get_unread_count(db: Session, recipient_id: int) -> int:
+    """
+    Кількість для бейджа на дзвонику. Лічимо саме `is_seen=false` —
+    щоб бейдж зник, як тільки юзер відкрив сторінку списку, навіть якщо
+    окремі сповіщення ще не клікнуті.
+    """
     return db.execute(
         select(func.count(Notification.id)).where(
             Notification.recipient_id == recipient_id,
-            Notification.is_read.is_(False),
+            Notification.is_seen.is_(False),
         )
     ).scalar_one()
 
 
-def mark_all_read(db: Session, recipient_id: int) -> int:
-    """Помічає всі непрочитані сповіщення юзера як прочитані. Повертає к-сть."""
+def mark_all_seen(db: Session, recipient_id: int) -> int:
+    """
+    Помічає усі сповіщення юзера як 'побачені' (is_seen=true).
+    Викликається при відкритті сторінки /notifications. is_read лишається
+    незмінним — щоб конкретні айтеми ще були виділені до натискання.
+    """
     result = db.execute(
         Notification.__table__.update()
         .where(
             Notification.recipient_id == recipient_id,
-            Notification.is_read.is_(False),
+            Notification.is_seen.is_(False),
         )
-        .values(is_read=True)
+        .values(is_seen=True)
     )
     db.commit()
     return result.rowcount or 0
+
+
+def mark_read(db: Session, recipient_id: int, notification_id: int) -> bool:
+    """
+    Помічає конкретне сповіщення як прочитане. Юзер клацнув по ньому —
+    візуальне виділення зникає. Повертає True якщо знайдено й оновлено.
+    """
+    notif = db.execute(
+        select(Notification).where(
+            Notification.id == notification_id,
+            Notification.recipient_id == recipient_id,
+        )
+    ).scalar_one_or_none()
+    if notif is None:
+        return False
+
+    if not notif.is_read or not notif.is_seen:
+        notif.is_read = True
+        notif.is_seen = True
+        db.commit()
+    return True

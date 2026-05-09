@@ -30,10 +30,16 @@ export default function NotificationsPage() {
       .catch(() => toast.error('Не вдалося завантажити сповіщення'))
       .finally(() => setLoading(false));
 
-    // Як тільки користувач відкрив сторінку — позначаємо все як прочитане,
-    // щоб лічильник у навбарі скинувся.
-    notificationsAPI.markAllRead().catch(() => {});
+    // Тільки скидаємо бейдж на дзвонику. Виділення на самих айтемах
+    // лишається — поки юзер не клацне по ним.
+    notificationsAPI.markAllSeen().catch(() => {});
   }, [user]);
+
+  const handleItemClick = (id) => {
+    // Локально знімаємо виділення одразу (оптимістично) і шлемо запит.
+    setItems((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+    notificationsAPI.markRead(id).catch(() => {});
+  };
 
   if (!user) return null;
 
@@ -72,7 +78,7 @@ export default function NotificationsPage() {
 
       <div className="notifications-list">
         {items.map((n) => (
-          <NotificationItem key={n.id} n={n} />
+          <NotificationItem key={n.id} n={n} onClick={() => handleItemClick(n.id)} />
         ))}
       </div>
     </div>
@@ -80,12 +86,13 @@ export default function NotificationsPage() {
 }
 
 
-function NotificationItem({ n }) {
+function NotificationItem({ n, onClick }) {
   const sourceLabel = n.source_type === 'review' ? 'у рецензії' : 'у відповіді';
 
   return (
     <Link
       to={`/tracks/${n.track_id}`}
+      onClick={onClick}
       className={`card notification-item${n.is_read ? '' : ' notification-unread'}`}
     >
       <div className="notification-avatar">
