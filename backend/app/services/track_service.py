@@ -189,6 +189,35 @@ def create_track_manually(
 
     return track
 
+async def refresh_track_preview(db: Session, track_id: int) -> str | None:
+    """
+    Заново шукає preview_url через Deezer search (за назвою+артистом).
+    Спотіфаївські preview-токени вже все одно недоступні Client-Credentials-апу,
+    тому фолбек тільки на Deezer. Оновлює preview_updated_at.
+    Повертає актуальний URL (новий або старий, якщо знайти не вдалось).
+    """
+    from app.services.spotify_service import fetch_deezer_preview
+
+    track = db.execute(
+        select(Track).where(Track.id == track_id)
+    ).scalar_one_or_none()
+    if track is None:
+        return None
+
+    artist = db.execute(
+        select(Artist).where(Artist.id == track.artist_id)
+    ).scalar_one_or_none()
+    if artist is None:
+        return track.preview_url
+
+    new_url = await fetch_deezer_preview(track.title, artist.name)
+    track.preview_updated_at = datetime.now(timezone.utc)
+    if new_url:
+        track.preview_url = new_url
+    db.commit()
+    return track.preview_url
+
+
 def delete_track(db: Session, track_id: int) -> bool:
     """
     Видаляє трек повністю. Усі рецензії знесуться каскадом

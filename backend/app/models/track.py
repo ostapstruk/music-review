@@ -36,6 +36,9 @@ class Track(Base):
     preview_url: Mapped[str | None] = mapped_column(
         String(500), nullable=True,
     )
+    preview_updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
     # Audio features від Spotify (для радарної діаграми)
     danceability: Mapped[Decimal | None] = mapped_column(
         Numeric(3, 2), nullable=True,

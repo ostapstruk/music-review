@@ -209,7 +209,7 @@ export default function TrackDetail() {
         </div>
       )}
 
-      <AudioPlayer previewUrl={track.preview_url} title={track.title} />
+      <AudioPlayer trackId={track.id} previewUrl={track.preview_url} title={track.title} />
 
       <RatingHistogram trackId={track.id} />
 

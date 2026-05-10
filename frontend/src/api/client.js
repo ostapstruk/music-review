@@ -64,6 +64,10 @@ export const tracksAPI = {
   addFromSpotify: (data) => api.post('/tracks/from-spotify', data),
 
   delete: (id) => api.delete(`/tracks/${id}`),
+
+  /** Lazy refresh: викликається коли <audio> впав з помилкою (CDN-токен помер).
+   *  Повертає {preview_url} — новий або старий, якщо знайти не вдалось. */
+  refreshPreview: (id) => api.post(`/tracks/${id}/refresh-preview`),
 };
 
 // ============================================================================

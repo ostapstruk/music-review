@@ -1,16 +1,24 @@
 import { useState, useRef, useEffect } from 'react';
 import { FiPlay, FiPause, FiVolume2, FiVolumeX } from 'react-icons/fi';
+import { tracksAPI } from '../api/client';
 
-export default function AudioPlayer({ previewUrl, title }) {
+export default function AudioPlayer({ trackId, previewUrl, title }) {
   const audioRef = useRef(null);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.7);
   const [muted, setMuted] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState(previewUrl);
+  const refreshAttempted = useRef(false);
+
+  // Якщо previewUrl змінився ззовні (нова сторінка треку) — підхопимо.
+  useEffect(() => {
+    setCurrentUrl(previewUrl);
+    refreshAttempted.current = false;
+  }, [previewUrl]);
 
   useEffect(() => {
-    // Зупиняємо при зміні треку
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -23,7 +31,10 @@ export default function AudioPlayer({ previewUrl, title }) {
     if (playing) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play();
+      audioRef.current.play().catch(() => {
+        // play() може реджектнути якщо браузер заблокував або URL помер;
+        // onError окремо це підхопить.
+      });
     }
     setPlaying(!playing);
   };
@@ -41,6 +52,33 @@ export default function AudioPlayer({ previewUrl, title }) {
   const handleEnded = () => {
     setPlaying(false);
     setProgress(0);
+  };
+
+  const handleError = async () => {
+    // CDN-токен у URL-і помер — пробуємо просити бекенд за свіжим.
+    if (refreshAttempted.current || !trackId) {
+      setPlaying(false);
+      return;
+    }
+    refreshAttempted.current = true;
+    try {
+      const res = await tracksAPI.refreshPreview(trackId);
+      const fresh = res.data?.preview_url;
+      if (fresh && fresh !== currentUrl) {
+        setCurrentUrl(fresh);
+        // Після оновлення src React-ом, перетягуємо плеєр на новий URL і граємо.
+        setTimeout(() => {
+          if (audioRef.current) {
+            audioRef.current.load();
+            audioRef.current.play().catch(() => setPlaying(false));
+          }
+        }, 0);
+      } else {
+        setPlaying(false);
+      }
+    } catch {
+      setPlaying(false);
+    }
   };
 
   const handleSeek = (e) => {
@@ -77,16 +115,17 @@ export default function AudioPlayer({ previewUrl, title }) {
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  if (!previewUrl) return null;
+  if (!currentUrl) return null;
 
   return (
     <div className="audio-player card">
       <audio
         ref={audioRef}
-        src={previewUrl}
+        src={currentUrl}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleEnded}
+        onError={handleError}
       />
 
       <div className="player-main">

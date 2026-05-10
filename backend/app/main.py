@@ -1,3 +1,6 @@
+import asyncio
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -17,6 +20,21 @@ from app.api.v1 import (
     users,
 )
 from app.core.config import settings
+from app.services.preview_refresh_task import periodic_preview_refresh
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Фонова таска оновлення preview_url стартує разом з бекендом."""
+    task = asyncio.create_task(periodic_preview_refresh())
+    try:
+        yield
+    finally:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
 
 
 app = FastAPI(
@@ -24,6 +42,7 @@ app = FastAPI(
     version=settings.APP_VERSION,
     description="API для платформи рецензування музики",
     debug=settings.DEBUG,
+    lifespan=lifespan,
 )
 
 app.add_middleware(

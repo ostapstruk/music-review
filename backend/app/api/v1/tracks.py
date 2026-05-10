@@ -11,6 +11,7 @@ from app.services.track_service import (
     delete_track,
     get_track_detail,
     get_tracks_list,
+    refresh_track_preview,
 )
 from app.services.trending_service import get_trending_tracks
 
@@ -123,6 +124,22 @@ async def create_track(
         auto_approve=is_admin,
     )
     return track
+
+
+@router.post("/{track_id}/refresh-preview")
+async def refresh_track_preview_endpoint(
+    track_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Перевипускає Deezer-preview для треку. Викликається фронтом, коли
+    <audio> впав з помилкою (CDN-токен у URL-і протух). Без авторизації —
+    це self-healing операція, нікому не шкодить.
+    """
+    new_url = await refresh_track_preview(db, track_id)
+    if new_url is None:
+        raise HTTPException(status_code=404, detail=f"Track {track_id} not found")
+    return {"preview_url": new_url}
 
 
 @router.delete("/{track_id}", status_code=status.HTTP_204_NO_CONTENT)

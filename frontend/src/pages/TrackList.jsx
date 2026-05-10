@@ -132,7 +132,7 @@ export default function TrackList() {
                 ) : (
                   <div className="cover-placeholder"><FiStar size={32} /></div>
                 )}
-                <MiniPlay previewUrl={track.preview_url} />
+                <MiniPlay trackId={track.id} previewUrl={track.preview_url} />
                 {track.avg_rating > 0 && (
                   <span className={`cover-rating ${
                     track.avg_rating >= 8 ? 'rating-high' : track.avg_rating >= 5 ? 'rating-mid' : 'rating-low'
