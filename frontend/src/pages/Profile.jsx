@@ -3,12 +3,14 @@ import { Link } from 'react-router-dom';
 import { FiStar, FiMessageSquare, FiTrendingUp, FiUser, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { useSpeech } from '../context/SpeechContext';
 import { reviewsAPI, authAPI } from '../api/client';
 import usePageTitle from '../utils/usePageTitle';
 import RoleBadge from '../components/RoleBadge';
 
 export default function Profile() {
   const { user, refreshUser } = useAuth();
+  const { enabled: speechEnabled, rate: speechRate, setRate: setSpeechRate, speakForce } = useSpeech();
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -167,6 +169,38 @@ export default function Profile() {
           <div className="stat-icon"><FiTrendingUp size={24} /></div>
           <div className="stat-value">{highestRating > 0 ? lowestRating + '–' + highestRating : '—'}</div>
           <div className="stat-label">Діапазон оцінок</div>
+        </div>
+      </div>
+
+      <div className="card" style={{ padding: 20, marginTop: 16, marginBottom: 24 }}>
+        <h3 style={{ margin: 0, marginBottom: 12 }}>Налаштування озвучки інтерфейсу</h3>
+        <p style={{ margin: 0, marginBottom: 16, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+          Озвучка читає підказки кнопок і посилань голосом. Увімкнути її можна
+          через іконку динаміка у верхньому меню.
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+          <label style={{ minWidth: 140 }}>
+            Швидкість голосу: <strong>{speechRate.toFixed(2)}×</strong>
+          </label>
+          <input
+            type="range"
+            min="0.7"
+            max="1.5"
+            step="0.05"
+            value={speechRate}
+            onChange={(e) => setSpeechRate(parseFloat(e.target.value))}
+            aria-label="Швидкість голосу диктора"
+            style={{ flex: 1, minWidth: 200, maxWidth: 320 }}
+          />
+          <button
+            className="btn btn-sm btn-secondary"
+            onClick={() => speakForce('Перевірка швидкості голосу. Якщо вас усе влаштовує — натисніть зберегти.')}
+            disabled={!speechEnabled}
+            aria-label="Прослухати приклад голосу"
+            title={speechEnabled ? 'Прослухати приклад' : 'Спершу увімкніть озвучку у верхньому меню'}
+          >
+            Перевірити голос
+          </button>
         </div>
       </div>
 

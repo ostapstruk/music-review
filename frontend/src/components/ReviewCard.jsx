@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { FiThumbsUp, FiThumbsDown, FiVolume2, FiTrash2, FiMessageCircle, FiSend, FiChevronDown, FiChevronUp, FiCornerUpLeft } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
+import { useSpeech } from '../context/SpeechContext';
 import { reviewsAPI } from '../api/client';
 import toast from 'react-hot-toast';
 import UserAvatar from './UserAvatar';
@@ -11,6 +12,7 @@ import { Link } from 'react-router-dom';
 
 export default function ReviewCard({ review, onUpdate, initialVote = null }) {
   const { user } = useAuth();
+  const { speakForce, enabled: speechEnabled } = useSpeech();
   const [userVote, setUserVote] = useState(initialVote);
 
   useEffect(() => {
@@ -93,12 +95,10 @@ export default function ReviewCard({ review, onUpdate, initialVote = null }) {
 
   const handleSpeak = () => {
     if (!review.text) return toast.error('Немає тексту для озвучки');
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(review.text);
-    utterance.lang = 'uk-UA';
-    utterance.rate = 0.9;
-    window.speechSynthesis.speak(utterance);
-    toast.success('Озвучка запущена');
+    if (!speechEnabled) {
+      return toast.error('Спершу увімкніть озвучку у меню (іконка динаміка)');
+    }
+    speakForce(review.text);
   };
 
   const loadReplies = async () => {

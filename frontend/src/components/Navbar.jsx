@@ -5,7 +5,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
 import { useSpeech } from '../context/SpeechContext';
 import { FiMusic, FiLogIn, FiLogOut, FiUser, FiPlus, FiSun, FiMoon, FiEye, FiHeart, FiThumbsDown, FiVolume2, FiShield, FiCheck, FiBell } from 'react-icons/fi';
-import Speakable from './Speakable';
 import RoleBadge from './RoleBadge';
 
 const THEMES = [
@@ -16,7 +15,7 @@ const THEMES = [
 
 export default function Navbar() {
   const { user, logout } = useAuth();
-  const { enabled: speechEnabled, toggle: toggleSpeech, speak } = useSpeech();
+  const { enabled: speechEnabled, toggle: toggleSpeech } = useSpeech();
   const navigate = useNavigate();
   const location = useLocation();
   const [theme, setTheme] = useState(
@@ -93,16 +92,20 @@ export default function Navbar() {
         </Link>
 
         <div className="navbar-links">
-          <Speakable text="Перейти до гарячого чарту">
-            <Link to="/" className={"nav-link" + (location.pathname === "/" ? " nav-active" : "")}>
-              Чарт
-            </Link>
-          </Speakable>
-          <Speakable text="Переглянути усі треки">
-            <Link to="/tracks" className={"nav-link" + (location.pathname.startsWith("/tracks") ? " nav-active" : "")}>
-              Треки
-            </Link>
-          </Speakable>
+          <Link
+            to="/"
+            data-speak="Перейти до гарячого чарту"
+            className={"nav-link" + (location.pathname === "/" ? " nav-active" : "")}
+          >
+            Чарт
+          </Link>
+          <Link
+            to="/tracks"
+            data-speak="Переглянути усі треки"
+            className={"nav-link" + (location.pathname.startsWith("/tracks") ? " nav-active" : "")}
+          >
+            Треки
+          </Link>
         </div>
 
         <div className="navbar-actions">
@@ -151,12 +154,10 @@ export default function Navbar() {
                   <span className="nav-label">Адмін</span>
                 </Link>
               )}
-              <Speakable text="Додати новий трек">
-                <Link to="/tracks/new" className="btn btn-sm btn-primary nav-icon-link" aria-label="Додати трек">
-                  <FiPlus size={16} />
-                  <span className="nav-label">Додати трек</span>
-                </Link>
-              </Speakable>
+              <Link to="/tracks/new" className="btn btn-sm btn-primary nav-icon-link" aria-label="Додати новий трек">
+                <FiPlus size={16} />
+                <span className="nav-label">Додати трек</span>
+              </Link>
               <Link to="/profile" className="nav-link nav-user">
                 {user.avatar_url ? (
                   <img src={user.avatar_url} alt="" style={{ width: 22, height: 22, borderRadius: '50%', objectFit: 'cover' }} />
@@ -183,12 +184,10 @@ export default function Navbar() {
               </button>
             </>
           ) : (
-            <Speakable text="Увійти в акаунт">
-              <Link to="/login" className="btn btn-sm btn-primary nav-icon-link" aria-label="Увійти">
-                <FiLogIn size={16} />
-                <span className="nav-label">Увійти</span>
-              </Link>
-            </Speakable>
+            <Link to="/login" className="btn btn-sm btn-primary nav-icon-link" aria-label="Увійти в акаунт">
+              <FiLogIn size={16} />
+              <span className="nav-label">Увійти</span>
+            </Link>
           )}
         </div>
       </div>
