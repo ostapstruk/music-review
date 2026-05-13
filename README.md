@@ -1,197 +1,138 @@
-# 🎵 MusicReview
+# MusicReview
 
-Платформа для рецензування музики з інтеграцією Spotify, Deezer та ШІ-аналізом рецензій через Google Gemini.
+Веб-платформа для рецензування музики з інтеграцією Spotify, fallback-плеєром через Deezer і AI-самарі від Google Gemini. Дипломний проєкт.
 
-**Live demo:** [https://musicreview.online](https://musicreview.online)
+**Live:** [https://musicreview.online](https://musicreview.online)
 
-Дипломний проєкт.
+## Що вміє
 
-## ✨ Можливості
+**Музика та рецензії.** Юзер шукає треки у Spotify прямо з форми "Додати трек", обкладинка/тривалість/audio features підтягуються автоматично. Можна слухати 30-секундний фрагмент — Spotify-preview, або, якщо його нема, Deezer-fallback. На трек пишуться рецензії з оцінкою 1-10, на кожну можна тиснути лайк/дизлайк, а Gemini генерує коротке AI-самарі усіх рецензій під треком (кешується).
 
-### Контент
-- 🎵 Пошук та додавання треків через Spotify API
-- 🔊 Прослуховування 30-секундних фрагментів (Spotify + Deezer fallback)
-- ⭐ Рецензії з оцінкою 1-10 та текстом
-- 👍 Лайки/дизлайки на рецензіях
-- 🤖 ШІ-підсумок рецензій через Google Gemini
-- 📊 Trending-чарт з математичною формулою
+**Trending-чарт.** Окрема формула, не просто avg-rating:
+```
+score = avg_rating × log2(1 + reviews_7d) × time_decay
+time_decay = 1 / (1 + days_since_last_review / 7)
+```
+Тобто свіжий релізний хіт може випереджати золотий стандарт, у якого 10/10 — але остання рецензія була пів року тому.
 
-### Користувачі та ролі
-- 🔐 Реєстрація з **верифікацією email через 6-значний код** (Resend)
-- 🎟 Авторизація через JWT
-- 👤 Три ролі: **listener** (звичайний користувач), **artist** (підтверджений артист), **admin**
-- ✓ Перший зареєстрований користувач автоматично стає адміном
-- 🛡 Адмін може давати/знімати права адміна іншим юзерам прямо з UI
+**Дискусії під рецензіями.** Окремо від самих рецензій є тред відповідей (плоский, без оцінки) — кнопка "Відповіді (N)" розгортає коментарі, можна писати свої. У тексті відповіді підтримуються `@mention`-и: пишеш `@admin привіт` — це стає клікабельним посиланням на профіль того юзера. Поруч із кожною репліткою є кнопка "Відповісти", яка автоматом вставляє `@юзернейм` в інпут.
 
-### Артисти
-- 🎙 Юзер може подати **заявку на володіння артистом** (claim-флоу)
-- 📋 Адмін підтверджує/відхиляє заявку у адмін-панелі
-- 🎚 Підтверджений артист отримує **кабінет** із кнопкою синхронізації топ-треків зі Spotify
-- 🔗 На сторінці артиста — посилання на профіль власника, на профілі — посилання на сторінку артиста
+**Сповіщення.** Коли тебе згадують у рецензії або відповіді, у navbar зʼявляється дзвоник із червоним лічильником. Окрема сторінка `/notifications` показує перелік. Стани розділені: `is_seen` — для дзвоника (клінається коли відкрив сторінку), `is_read` — для конкретного айтема (клінається коли клацнув). Тобто бейдж зникає одразу, а саме повідомлення лишається підсвіченим, поки ти його не відкриєш.
 
-### Модерація
-- 🔍 **Усі нові треки** від listener-ів і артистів проходять модерацію в адмін-панелі
-- ✅ Адмін підтверджує / відхиляє кожен трек
-- 🚫 Адмін може видаляти будь-які треки і будь-які рецензії
-- 📥 Адмін має панель з двома вкладками: "Заявки на володіння артистом" і "Заявки на додавання трека"
+**Три ролі.**
+- `listener` — звичайний користувач. Реєструється, пише рецензії, видаляє тільки свої.
+- `artist` — підтверджений артист. Проходить claim-флоу (юзер обирає себе серед артистів → адмін затверджує). Отримує кабінет із кнопкою "Синхронізувати зі Spotify" — підтягує свої топ-треки.
+- `admin` — модерує все. Перший зареєстрований юзер автоматично стає адміном. Адмін може давати/знімати права іншим, видаляти треки і рецензії, керувати заявками.
 
-### Доступність
-- 🎨 Три теми: темна, світла, висока контрастність
-- 🔉 Озвучка рецензій та інтерфейсу (TTS)
-- ♿ ARIA-labels на ключових елементах
+**Модерація треків.** Усі нові треки (від listener-ів і артистів) спершу мають статус `pending`. Адмін у панелі бачить заявки і підтверджує/відхиляє. Якщо додає сам адмін — публікація одразу. Заявки на володіння артистами — окрема вкладка тієї ж панелі.
 
-### Інфраструктура
-- 📈 Моніторинг через Prometheus + Grafana
-- 🌐 Production-деплой на AWS EC2 з HTTPS (Caddy + Let's Encrypt)
-- 📧 Транзакційні листи через Resend
+**Верифікація email.** Реєстрація через 6-значний код, що приходить на пошту через Resend. Код живе 10 хвилин, повторне надсилання — раз на хвилину. Якщо `RESEND_API_KEY` не виставлений (локалка), код друкується у `docker compose logs backend` — зручно для тестів без реального SMTP.
 
-## 🏗 Технології
+**Самовідновлення плеєра.** Deezer і Spotify URL-и для preview містять CDN-токени, які протухають за кілька днів. Дві захисні мережі:
+- Lazy refresh — якщо `<audio>` фейлиться при play, фронт автоматично запитує POST `/tracks/{id}/refresh-preview`, бекенд робить новий Deezer-search і повертає свіжий URL, плеєр ретраїть.
+- Background scheduler — фонова asyncio-таска при старті бекенду; кожні 6 годин оновлює пачку з 30 найстаріших треків (за `preview_updated_at`).
 
-**Бекенд:**
-- Python 3.12 + FastAPI
-- SQLAlchemy 2.0 + PostgreSQL 16
-- JWT (python-jose) + bcrypt
-- httpx для зовнішніх HTTP-запитів
-- google-generativeai (Gemini)
-- Resend HTTP API (email)
+**Доступність та теми.** Три теми: темна (default), світла, висока контрастність. Озвучка інтерфейсу (TTS) через `SpeechSynthesisUtterance`. ARIA-labels на ключових інтерактивних елементах. Адаптивна мобільна верстка (тестовано на iPhone Safari).
 
-**Фронтенд:**
-- React 18 + Vite
-- react-router-dom
-- axios
-- react-icons
-- react-hot-toast
+**Моніторинг.** Prometheus скрейпить `/metrics` бекенду, Grafana малює дашборд з provisioned-конфігом — без ручних налаштувань.
 
-**Інфраструктура:**
-- Docker + Docker Compose
-- Caddy (reverse-proxy + автоматичний TLS у production)
-- Prometheus (метрики)
-- Grafana (дашборди)
-- nginx (статика фронтенду + проксі на бекенд)
+## Стек
 
-## 🚀 Локальний запуск
+| Шар | Технології |
+|-----|------------|
+| Backend | Python 3.12, FastAPI, SQLAlchemy 2.0, PostgreSQL 16, python-jose (JWT), bcrypt, httpx, google-generativeai |
+| Frontend | React 18, Vite, react-router-dom, axios, react-icons, react-hot-toast |
+| Infra (prod) | Docker Compose, Caddy (HTTPS + reverse-proxy), Resend (transactional email), AWS EC2 |
+| Observability | Prometheus, Grafana, prometheus-fastapi-instrumentator |
 
-### Вимоги
+## Локальний запуск
 
-- Docker Desktop
-- Git
-
-### Швидкий старт
-
-1. Клонуйте репозиторій:
+Потрібен Docker Desktop і Git.
 
 ```bash
 git clone https://github.com/ostapstruk/music-review.git
 cd music-review
 ```
 
-2. Створіть `.env` у корені проєкту:
+Створи `.env` у корені:
 
 ```env
-# PostgreSQL
 POSTGRES_USER=musicreview
 POSTGRES_PASSWORD=supersecret123
 POSTGRES_DB=musicreview_db
 POSTGRES_PORT=5432
 
-# JWT
-SECRET_KEY=your_secret_key_here
+SECRET_KEY=  # python -c "import secrets; print(secrets.token_urlsafe(64))"
 
-# Spotify API
-SPOTIFY_CLIENT_ID=your_spotify_client_id
-SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+SPOTIFY_CLIENT_ID=
+SPOTIFY_CLIENT_SECRET=
+GEMINI_API_KEY=
 
-# Google Gemini
-GEMINI_API_KEY=your_gemini_api_key
-
-# Resend (email верифікація). Якщо порожньо — код друкується у логах backend.
+# Опційно. Без ключа код верифікації пишеться у логи бекенду.
 RESEND_API_KEY=
 EMAIL_FROM=MusicReview <onboarding@resend.dev>
 ```
 
-Як отримати ключі:
-- **SECRET_KEY**: `python -c "import secrets; print(secrets.token_urlsafe(64))"`
-- **Spotify**: https://developer.spotify.com/dashboard
-- **Gemini**: https://aistudio.google.com/apikey
-- **Resend** (опційно для локалу): https://resend.com → API Keys
+Де брати ключі:
+- Spotify: https://developer.spotify.com/dashboard
+- Gemini: https://aistudio.google.com/apikey
+- Resend: https://resend.com → API Keys (опційно)
 
-3. Запустіть усі сервіси:
+Підіймай стек:
 
 ```bash
 docker compose up --build
 ```
 
-Перший запуск займе кілька хвилин (білд образів).
-
-4. Відкрийте в браузері:
+Перший білд займе кілька хвилин. Після запуску:
 
 | Сервіс | URL |
 |--------|-----|
-| Веб-інтерфейс | http://localhost:3000 |
-| API документація | http://localhost:8000/docs |
+| Веб | http://localhost:3000 |
+| Swagger UI | http://localhost:8000/docs |
 | Метрики | http://localhost:8000/metrics |
 | Prometheus | http://localhost:9090 |
-| Grafana | http://localhost:3001 (admin/admin) |
+| Grafana | http://localhost:3001 (`admin` / `admin`) |
 
-### 🧑‍🚀 Демо-користувачі
+## Демо-користувачі
 
-База ініціалізується з 4 демо-юзерами для зручного тестування:
+Свіжа БД одразу містить 4 акаунти для тестування (всі pre-verified):
 
 | Email | Пароль | Роль |
 |-------|--------|------|
 | `admin@example.com` | `admin123` | Адмін |
-| `artist@example.com` | `artist123` | Listener (для тесту artist claim-флоу) |
+| `artist@example.com` | `artist123` | Listener — для тесту claim-флоу |
 | `listener@example.com` | `listener123` | Звичайний юзер |
 | `critic@example.com` | `critic123` | Звичайний юзер |
 
-> Демо-юзери одразу мають `is_verified=true` і не потребують підтвердження email.
+Щоб скинути БД до сід-стану: `docker compose down -v && docker compose up --build`.
 
-### Зупинка
+## Production-деплой (AWS EC2)
 
-```bash
-docker compose down
-```
-
-Дані БД збережуться. Щоб скинути все начисто:
-
-```bash
-docker compose down -v
-```
-
-## ☁️ Production деплой (AWS EC2)
-
-Використовується окремий compose-файл `docker-compose.prod.yml`:
-- Postgres-порт **не виставляється назовні** (доступний тільки в docker-network)
-- Frontend бʼє в `/api/v1` через nginx-проксі (відносний URL)
-- **Caddy** як reverse-proxy на 80/443 з автоматичним Let's Encrypt
-- На сервісах `restart: unless-stopped`
-
-### Запуск на VPS
+В репозиторії є окремий `docker-compose.prod.yml`. Відмінності від звичайного:
+- Postgres-порт не виставляється на хост (доступний лише в docker-мережі).
+- Frontend бʼє в `/api/v1` як відносний URL — nginx у фронт-контейнері проксить на backend.
+- Caddy працює як єдина точка входу на 80/443 і автоматично отримує Let's Encrypt-сертифікат.
+- `restart: unless-stopped` на всіх сервісах.
 
 ```bash
-# На свіжій Ubuntu 22.04+
+# На свіжій Ubuntu 22.04+:
 sudo apt update && sudo apt install -y git
 curl -fsSL https://get.docker.com | sudo sh
-sudo usermod -aG docker $USER && exit  # релогін
+sudo usermod -aG docker $USER && exit  # релогін потрібен для групи
 
-# Знов SSH
 git clone https://github.com/ostapstruk/music-review.git
 cd music-review
-
-# .env з реальними ключами і доменом
-nano .env
-# додатково для Caddy:
-# DOMAIN=yourdomain.online
-# ACME_EMAIL=you@gmail.com
+nano .env  # заповнюєш реальними ключами, додаєш RESEND_API_KEY
 
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-Caddy автоматично отримає сертифікат для домену з `Caddyfile`.
+Налаштування Caddy для свого домену — у `Caddyfile`. Якщо домен валідно резолвиться на IP сервера, через хвилину сайт буде на `https://yourdomain.online` з валідним сертифікатом.
 
 ### Накатка міграцій на існуючу БД
 
-Якщо зливаєш свіжу версію коду, а БД вже є — накатимо міграції руками:
+Якщо тягнеш свіжий код на сервер, де БД уже жива (з даними), накотити свіжі міграції:
 
 ```bash
 docker compose -f docker-compose.prod.yml exec -T postgres \
@@ -199,97 +140,71 @@ docker compose -f docker-compose.prod.yml exec -T postgres \
   < database/migrations/<номер>_<назва>.sql
 ```
 
-Список усіх міграцій — у `database/migrations/`.
+Усі міграції лежать у `database/migrations/`, нумеровані за порядком застосування.
 
-## 📂 Структура проєкту
+## Структура
 
 ```
 music-review/
-├── backend/                  # FastAPI застосунок
+├── backend/                  FastAPI-застосунок
 │   ├── app/
-│   │   ├── api/v1/           # Ендпоінти REST API
-│   │   ├── core/             # Конфігурація, БД, безпека, deps
-│   │   ├── models/           # SQLAlchemy моделі
-│   │   ├── schemas/          # Pydantic схеми
-│   │   └── services/         # Бізнес-логіка (auth, tracks, artist, email, ...)
+│   │   ├── api/v1/           REST-ендпоінти за версією
+│   │   ├── core/             config, db engine, безпека, FastAPI deps
+│   │   ├── models/           SQLAlchemy 2.0 моделі
+│   │   ├── schemas/          Pydantic-схеми (request/response)
+│   │   └── services/         бізнес-логіка (auth, track, artist, email, …)
 │   ├── Dockerfile
 │   └── requirements.txt
-├── frontend/                 # React застосунок
+├── frontend/                 React + Vite
 │   ├── src/
-│   │   ├── api/              # HTTP-клієнт
-│   │   ├── components/       # Компоненти UI (RoleBadge, ReviewCard, ...)
-│   │   ├── context/          # AuthContext, SpeechContext
-│   │   ├── pages/            # Сторінки (Login, VerifyEmail, AdminClaims, ArtistDashboard...)
-│   │   └── styles/           # CSS
+│   │   ├── api/              axios-обгортки на ендпоінти
+│   │   ├── components/       UI (ReviewCard, RoleBadge, AudioPlayer, …)
+│   │   ├── context/          AuthContext, SpeechContext
+│   │   ├── pages/            Login, Register, VerifyEmail, AdminClaims, …
+│   │   ├── utils/            timeAgo, renderMentions, usePageTitle
+│   │   └── styles/           global.css
 │   ├── Dockerfile
-│   ├── nginx.conf
+│   ├── nginx.conf            проксує /api → backend, віддає статику
 │   └── package.json
 ├── database/
-│   ├── init/                 # SQL для першого запуску (схема + сід)
-│   ├── migrations/           # Окремі міграції для існуючих БД
-│   └── seeds/                # Демо-дані
-├── monitoring/
-│   ├── prometheus.yml
-│   └── grafana/
-├── Caddyfile                 # Reverse-proxy для prod
-├── docker-compose.yml        # Локальний запуск
-├── docker-compose.prod.yml   # Production (з Caddy/HTTPS)
-└── .env                      # Секрети (не комітиться)
+│   ├── init/                 SQL для свіжого контейнера (схема + сід)
+│   ├── migrations/           окремі ALTER для апгрейду живої БД
+│   └── seeds/                демо-дані
+├── monitoring/               Prometheus + Grafana provisioning
+├── Caddyfile                 reverse-proxy + Let's Encrypt
+├── docker-compose.yml        локалка
+├── docker-compose.prod.yml   прод (з Caddy/HTTPS, без public 5432)
+└── .env                      секрети (не комітиться)
 ```
 
-## 🗄 База даних
+## База даних
 
-15 таблиць:
-- **Користувачі та ролі**: `users`, `email_verifications`
-- **Артисти**: `artists`, `artist_claims`, `albums`
-- **Треки**: `tracks` (зі статусом модерації), `track_genres`, `genres`
-- **Рецензії**: `reviews`, `review_likes`
+16 таблиць, нормалізовано до 3NF. Ключові:
+
+- **Користувачі**: `users`, `email_verifications`
+- **Артисти**: `artists` (з полем `claimed_by_user_id`), `artist_claims`, `albums`
+- **Треки**: `tracks` (зі статусом модерації, submitter, reviewer), `track_genres`, `genres`
+- **Рецензії та обговорення**: `reviews`, `review_likes`, `review_replies`
+- **Сповіщення**: `notifications` (з полями `is_read` і `is_seen` для двостанної моделі)
 - **Інше**: `badges`, `user_badges`, `user_favorite_tracks`, `ai_summaries`, `activity_feed`
 
-Foreign keys, індекси, CHECK-обмеження на ролі/статуси.
+Скрізь Foreign keys з відповідними `ON DELETE` правилами, CHECK-обмеження на ролі/статуси, індекси на критичних колонках.
 
-## 📊 API
+## API
 
-Повна документація: `https://musicreview.online/api/v1` → Swagger UI на `/docs` локально.
+OpenAPI / Swagger UI доступний за `/docs` локально (`http://localhost:8000/docs`) або в продакшні через `/api/v1/docs`. Основні групи:
 
-Основні групи:
-- `/api/v1/auth` — login, verify, resend-code
-- `/api/v1/users` — реєстрація, профілі
-- `/api/v1/tracks` — каталог + модерація
-- `/api/v1/reviews` — рецензії, лайки
-- `/api/v1/artists` — публічні сторінки + claim, sync, кабінет
-- `/api/v1/admin` — модерація заявок (артистів і треків), управління ролями
-- `/api/v1/genres`, `/api/v1/ai`, `/api/v1/activity`, `/api/v1/stats`
+| Префікс | Призначення |
+|---------|-------------|
+| `/api/v1/auth` | login, verify, resend-code |
+| `/api/v1/users` | реєстрація, профілі, lookup за username |
+| `/api/v1/tracks` | каталог, search, додавання, видалення, refresh-preview |
+| `/api/v1/reviews` | рецензії, лайки, відповіді (replies), голоси |
+| `/api/v1/artists` | публічні сторінки артистів, claim, /me, sync-tracks |
+| `/api/v1/admin` | модерація claim-ів і track-submissions, зміна ролей |
+| `/api/v1/notifications` | стрічка сповіщень, lifecycle (seen / read) |
+| `/api/v1/genres`, `/ai`, `/activity`, `/stats` | довідники та статистика |
 
-## 🎯 Алгоритм Trending
+## Ліцензія
 
-```
-score = avg_rating × log2(1 + recent_reviews_7d) × time_decay
-time_decay = 1 / (1 + days_since_last_review / 7)
-```
-
-Враховує: середню оцінку, кількість рецензій за тиждень, свіжість.
-
-## 🔐 Email-верифікація
-
-При реєстрації:
-1. Юзер створюється у статусі `is_verified=false`.
-2. Бекенд генерує 6-значний код (TTL 10 хв) і шле через Resend HTTP API.
-3. Юзер вводить код на `/verify-email` → автоматично логіниться (видається JWT).
-4. Якщо код прострочений — кнопка "Надіслати ще раз" (rate-limit 60 с).
-5. Якщо `RESEND_API_KEY` порожній — лист не відправляється, код друкується у `docker compose logs backend` (для локалу).
-
-## 🎯 Модерація треків
-
-Будь-який не-адмін юзер, що додає трек:
-1. Створюється запис у `tracks` зі `status='pending'`.
-2. Трек **не зʼявляється у каталозі** до підтвердження.
-3. Автору і адміну він видимий зі спеціальним банером "На модерації".
-4. Адмін у адмін-панелі (вкладка "Заявки на додавання трека") підтверджує або відхиляє.
-5. При підтвердженні `status='approved'`, трек публічний.
-
-Адмін додає треки одразу як `approved`.
-
-## 📜 Ліцензія
-
-MIT — для дипломного/освітнього використання.
+MIT — для дипломного й освітнього використання.
