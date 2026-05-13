@@ -118,8 +118,14 @@ export default function ReviewCard({ review, onUpdate, initialVote = null }) {
   const toggleReplies = () => {
     const next = !repliesOpen;
     setRepliesOpen(next);
-    if (next && !repliesLoaded) {
-      loadReplies();
+    if (!next) return;
+    if (!repliesLoaded) loadReplies();
+    // Автоматично підставляємо @автора рецензії — як це робить кнопка
+    // "Відповісти" на конкретній відповіді. Не затираємо вже набраний
+    // текст і не префіксуємо самого себе.
+    if (user && review.username && user.id !== review.user_id) {
+      setReplyText((current) => current || `@${review.username} `);
+      setTimeout(() => replyInputRef.current?.focus(), 0);
     }
   };
 
