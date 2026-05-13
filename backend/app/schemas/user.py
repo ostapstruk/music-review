@@ -12,8 +12,8 @@ class UserCreate(BaseModel):
     username: str = Field(
         min_length=3,
         max_length=50,
-        pattern=r"^[a-zA-Z0-9_]+$",
-        description="3-50 символів: латиниця, цифри, підкреслення",
+        pattern=r"^[a-zA-Z0-9_Ѐ-ӿԀ-ԯ]+$",
+        description="3-50 символів: літери латиниці або кирилиці, цифри, підкреслення",
     )
     email: EmailStr = Field(
         description="Валідна email-адреса",

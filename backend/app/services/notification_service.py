@@ -10,10 +10,10 @@ from sqlalchemy.orm import Session
 from app.models import Notification, Review, Track, User
 
 
-# Юзернейми у нашій системі — латиниця/цифри/підкреслення (див. UserCreate
-# валідатор: ^[a-zA-Z0-9_]+$). Тому матчимо саме цей патерн — щоб
-# не зачіпати email-и типу `admin@example.com` у тексті.
-MENTION_PATTERN = re.compile(r"@([a-zA-Z0-9_]+)")
+# Юзернейми у нашій системі — латиниця/кирилиця/цифри/підкреслення
+# (див. UserCreate валідатор). Матчимо саме цей патерн — щоб не зачіпати
+# email-и типу `admin@example.com` у тексті.
+MENTION_PATTERN = re.compile(r"@([a-zA-Z0-9_Ѐ-ӿԀ-ԯ]+)")
 
 SNIPPET_LIMIT = 200
 
