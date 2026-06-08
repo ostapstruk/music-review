@@ -246,13 +246,21 @@ async def sync_artist_tracks(
     fetched = len(top)
     created = 0
     skipped = 0
+    promoted = 0
 
     for spotify_track in top:
         existing = db.execute(
             select(Track).where(Track.spotify_id == spotify_track["spotify_id"])
         ).scalar_one_or_none()
         if existing is not None:
-            skipped += 1
+            # Якщо адмін повторно синкає і вже існуючий трек у статусі
+            # pending — промотуємо до approved, щоб не доводилось окремо
+            # йти в адмін-панель модерації.
+            if auto_approve and existing.status == "pending":
+                existing.status = "approved"
+                promoted += 1
+            else:
+                skipped += 1
             continue
 
         await create_track_from_spotify(
@@ -263,10 +271,14 @@ async def sync_artist_tracks(
         )
         created += 1
 
+    if promoted:
+        db.commit()
+
     return {
         "artist_id": artist.id,
         "spotify_id": artist.spotify_id,
         "fetched": fetched,
         "created": created,
         "skipped": skipped,
+        "promoted": promoted,
     }

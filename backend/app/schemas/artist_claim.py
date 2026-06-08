@@ -41,3 +41,4 @@ class ArtistSyncResult(BaseModel):
     fetched: int
     created: int
     skipped: int
+    promoted: int = 0

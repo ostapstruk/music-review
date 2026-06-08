@@ -53,11 +53,11 @@ export default function ArtistDashboard() {
     setSyncing(true);
     try {
       const res = await artistsAPI.syncMyTracks();
-      const { fetched, created, skipped } = res.data;
-      toast.success(
-        `Знайдено ${fetched} треків. Додано нових: ${created}. Уже були: ${skipped}.`,
-        { duration: 5000 },
-      );
+      const { fetched, created, skipped, promoted = 0 } = res.data;
+      const parts = [`Знайдено ${fetched} треків`, `додано нових: ${created}`];
+      if (promoted > 0) parts.push(`опубліковано раніше pending: ${promoted}`);
+      parts.push(`уже були: ${skipped}`);
+      toast.success(parts.join('. ') + '.', { duration: 5000 });
       await loadArtist();
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Не вдалося синхронізувати');

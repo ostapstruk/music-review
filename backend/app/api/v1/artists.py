@@ -94,9 +94,16 @@ async def sync_my_tracks(
     current_user: User = Depends(require_artist),
     db: Session = Depends(get_db),
 ):
-    """Тягне топ-треки артиста зі Spotify і додає нові у нашу БД."""
+    """Тягне топ-треки артиста зі Spotify і додає нові у нашу БД.
+    Адмін отримує auto_approve — нові треки одразу опубліковані,
+    а вже існуючі pending-треки промотуються до approved.
+    """
     try:
-        return await sync_artist_tracks(db, current_user.id)
+        return await sync_artist_tracks(
+            db,
+            current_user.id,
+            auto_approve=current_user.role == "admin",
+        )
     except NotAnArtistError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ArtistMissingSpotifyIdError as e:
